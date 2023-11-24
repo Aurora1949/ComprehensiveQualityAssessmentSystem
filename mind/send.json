@@ -1,0 +1,35 @@
+{
+  "xh": "",
+  "semester": "2022-2023-2",
+  "data": [
+    {
+      "project": "德育",
+      "add": [
+        {
+          "codename": "xianxue",
+          "value": 1,
+          "evidence": {
+            "picture": "url...",
+            "description": "xxx"
+          }
+        },
+        {
+          "codename": "anshijiaoxuefei",
+          "value": 1,
+          "evidence": {
+            "picture": "url...",
+            "description": "xxx"
+          }
+        },
+        {
+          "codename": "yijiganbu",
+          "value": 5,
+          "evidence": {
+            "picture": "url...",
+            "description": "xxx"
+          }
+        }
+      ]
+    }
+  ]
+}
