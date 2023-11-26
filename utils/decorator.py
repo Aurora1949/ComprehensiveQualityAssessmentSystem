@@ -1,8 +1,12 @@
 import logging
+import os
 from functools import wraps
 from typing import Callable
 
 from fastapi import HTTPException, Header
+
+if not os.path.exists('./log'):
+    os.makedirs('./log')
 
 logging.basicConfig(
     format='[%(levelname)s] %(asctime)s: %(message)s',
