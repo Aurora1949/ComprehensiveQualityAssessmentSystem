@@ -46,8 +46,10 @@
                       </ul>
                     </li>
                     <li class="mt-auto">
-                      <router-link :to="{name: 'panelMe'}" class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-indigo-200 hover:bg-indigo-700 hover:text-white">
-                        <Cog6ToothIcon class="h-6 w-6 shrink-0 text-indigo-200 group-hover:text-white" aria-hidden="true"/>
+                      <router-link :to="{name: 'panelMe'}"
+                                   class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-indigo-200 hover:bg-indigo-700 hover:text-white">
+                        <Cog6ToothIcon class="h-6 w-6 shrink-0 text-indigo-200 group-hover:text-white"
+                                       aria-hidden="true"/>
                         账户设置
                       </router-link>
                     </li>
@@ -85,6 +87,7 @@
             </li>
             <li class="mt-auto">
               <router-link :to="{name: 'panelMe'}"
+                           @click="changeIndex(5)"
                            class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-indigo-200 hover:bg-indigo-700 hover:text-white">
                 <Cog6ToothIcon class="h-6 w-6 shrink-0 text-indigo-200 group-hover:text-white" aria-hidden="true"/>
                 账户设置
@@ -107,14 +110,10 @@
         <div class="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true"/>
 
         <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-          <form class="relative flex flex-1" action="#" method="GET">
-            <label for="search-field" class="sr-only">Search</label>
-            <MagnifyingGlassIcon class="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-gray-400"
-                                 aria-hidden="true"/>
-            <input id="search-field"
-                   class="block h-full w-full border-0 py-0 pl-8 pr-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
-                   placeholder="Search..." type="search" name="search"/>
-          </form>
+          <div class="relative flex flex-1 items-center">
+            <el-tag :type="comprehensiveStore.getTagText.type">{{ comprehensiveStore.getTagText.msg }}</el-tag>
+            <span class="px-2 font-bold">{{ comprehensiveStore.getTitle }}</span>
+          </div>
           <div class="flex items-center gap-x-4 lg:gap-x-6">
             <button type="button" class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
               <span class="sr-only">View notifications</span>
@@ -191,17 +190,19 @@ import {
   HomeIcon,
   UsersIcon,
   XMarkIcon,
+  InboxStackIcon
 } from '@heroicons/vue/24/outline'
 import {ChevronDownIcon, MagnifyingGlassIcon} from '@heroicons/vue/20/solid'
 import router from "@/router";
 import {RouteLocationRaw} from "vue-router";
 import avatarM from '@/assets/images/avatar-m.png'
 import avatarF from '@/assets/images/avatar-f.png'
-import {useUserStore} from "@/store";
+import {useComprehensiveStore, useUserStore} from "@/store";
 import {storeToRefs} from "pinia";
 import logo from "@/assets/images/jg_logo.png"
 
 const current = ref(0)
+const comprehensiveStore = useComprehensiveStore()
 
 interface INavigation {
   name: string
@@ -214,7 +215,8 @@ interface INavigation {
 const navigation: Array<INavigation> = [
   {name: '主页', href: {name: 'panelIndex'}, icon: HomeIcon, current: true, auth: 0},
   {name: '我的综测', href: {name: 'panelAssessment'}, icon: ChartPieIcon, current: false, auth: 0},
-  {name: '人员管理', href: {name: 'panelManage'}, icon: UsersIcon, current: false, auth: 1},
+  {name: '综测管理', href: {name: 'panelComprehensive'}, icon: InboxStackIcon, current: false, auth: 2},
+  {name: '人员管理', href: {name: 'panelManage'}, icon: UsersIcon, current: false, auth: 1}
 ]
 
 const userNavigation = [
@@ -232,9 +234,12 @@ const sidebarOpen = ref(false)
 const userStore = useUserStore()
 const {user} = storeToRefs(userStore)
 
-onMounted(async () => {
-  await userStore.updateUserInfo().catch(err => {
+onMounted(() => {
+  userStore.updateUserInfo().catch(err => {
     router.push({name: 'login'})
+    console.log(err)
+  })
+  comprehensiveStore.update().catch(err => {
     console.log(err)
   })
 })

@@ -3,13 +3,13 @@ import {IUser, IUserExtend} from "@/types/index";
 
 export class User implements IUser {
   account: string;
-  auth: integer;
+  auth: AUTH;
   extend?: UserExtend;
   is_active: boolean;
 
   constructor() {
     this.account = "";
-    this.auth = 0;
+    this.auth = AUTH.USER;
     this.extend = new UserExtend;
     this.is_active = false;
   }
@@ -25,7 +25,7 @@ export class User implements IUser {
 class UserExtend implements IUserExtend {
   class_name: string;
   duties: string | null;
-  gender: integer;
+  gender: GENDER;
   name: string;
   uid: string;
 
@@ -33,8 +33,19 @@ class UserExtend implements IUserExtend {
   constructor() {
     this.class_name = "";
     this.duties = null;
-    this.gender = 0;
+    this.gender = GENDER.FEMALE;
     this.name = "";
     this.uid = "";
   }
+}
+
+export enum AUTH {
+  USER,
+  ADMIN,
+  SUPER_ADMIN
+}
+
+export enum GENDER {
+  FEMALE,
+  MALE
 }

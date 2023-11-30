@@ -5,10 +5,13 @@
         <div>
           <img class="h-12 w-auto" :src="logo" alt="建筑工程学院"/>
           <h2 class="mt-8 text-2xl font-bold leading-9 tracking-tight text-gray-900">欢迎使用综合素质评价系统</h2>
-          <p class="mt-2 text-sm leading-6 text-gray-500">
+          <p class="mt-2 text-sm leading-4 text-gray-500">当前期综测：{{ comprehensiveStore.getTitle }}</p>
+          <p class="mt-2 text-sm leading-4 text-gray-500">
             请先登录
             {{ ' 或 ' }}
-            <router-link :to="{name: 'login'}" class="font-semibold text-indigo-600 hover:text-indigo-500">本期综测结果快速查询</router-link>
+            <router-link :to="{name: 'login'}" class="font-semibold text-indigo-600 hover:text-indigo-500">
+              本期综测结果快速查询
+            </router-link>
           </p>
         </div>
 
@@ -47,7 +50,8 @@
                 </div>
 
                 <div class="text-sm leading-6">
-                  <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500" @click="handleUnknownMyAccount">忘记密码？</a>
+                  <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500"
+                     @click="handleUnknownMyAccount">忘记密码？</a>
                 </div>
               </div>
 
@@ -110,6 +114,12 @@ import {onMounted, ref} from "vue";
 import {userLogin} from "@/api/login.ts";
 import router from "@/router";
 import {ElMessage} from "element-plus";
+import {IUserLogin} from "@/types";
+import {AxiosError} from "axios";
+import {useComprehensiveStore} from "@/store";
+import {storeToRefs} from "pinia";
+
+const comprehensiveStore = useComprehensiveStore()
 
 interface LoginModel {
   username: string
@@ -121,20 +131,22 @@ interface LoginModel {
 const login = ref<LoginModel>({code: "", passwd: "", remember: false, username: ""})
 
 const handleSubmitButton = async () => {
-  const user: IUserLogin = {
-    username: login.value.username,
-    password: login.value.passwd
-  }
-  await userLogin(user).then(res => {
+  try {
+    const user: IUserLogin = {
+      username: login.value.username,
+      password: login.value.passwd
+    }
+    const res = await userLogin(user)
     if (login.value.remember) localStorage.setItem('token', res.access_token)
     else sessionStorage.setItem('token', res.access_token)
-    router.push({name: 'panelIndex'})
-  }).catch(err => {
+    await router.push({name: 'panelIndex'})
+  } catch (err: any) {
+    console.log(err);
     ElMessage({
       type: "error",
       message: err.detail ? err.detail : err
     })
-  })
+  }
 }
 
 const handleUnknownMyAccount = () => {
@@ -142,6 +154,7 @@ const handleUnknownMyAccount = () => {
 }
 
 onMounted(() => {
+  comprehensiveStore.update()
   if (localStorage.getItem('token')) router.push({'name': 'panelIndex'})
 })
 

@@ -1,26 +1,30 @@
 from datetime import timedelta
-from typing import Optional
+from typing import Any, Union
 
 from fastapi import FastAPI, Depends, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_pagination import Page, add_pagination
-from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from database import crud
+from database.crud import create_new_comprehensive, get_all_comprehensive, get_current_comprehensive, \
+    set_current_comprehensive_db
 from database.utils import get_db, init_db
+from models.comprehensive import Comprehensive
 from models.user import User
 from schemas.auth import IToken
-from schemas.response import IUserListResponse
+from schemas.comprehensive import IComprehensive, ICurrentComprehensive, IChangeComprehensive, \
+    IComprehensiveFormTemplate
 from schemas.user import IUserCreate, IUser
 from utils.auth import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, get_current_admin_user, \
-    get_current_super_admin_user, SECRET_KEY
+    get_current_super_admin_user, SECRET_KEY, get_current_active_user
 from utils.decorator import record_fatal_error
 from utils.excel import get_student_from_upload_excel
 from utils.functions import is_uid_valid, is_user_exists
+from utils.uxml import parse_xml
 
 app = FastAPI()
 
@@ -108,7 +112,7 @@ async def create_user_by_excel(file: UploadFile, current_user: User = Depends(ge
 
 
 @app.get("/user/me", response_model=IUser)
-async def read_user_info(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def read_user_info(current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
     """
     bug fix see: https://stackoverflow.com/questions/74252768/missinggreenlet-greenlet-spawn-has-not-been-called
     :param current_user:
@@ -152,6 +156,34 @@ async def modify_user_info(user: IUser, auth=Depends(get_current_admin_user), db
 async def create_user(user: IUser, auth=Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     await crud.create_user(db, user)
     return {"msg": "成功"}
+
+
+@app.post("/admin/comprehensive/create")
+async def create_comprehensive(comprehensive: IComprehensive, auth=Depends(get_current_super_admin_user),
+                               db=Depends(get_db)):
+    await create_new_comprehensive(db, comprehensive)
+    return {"msg": "成功"}
+
+
+@app.get("/admin/comprehensive/queryAll", response_model=list[IComprehensive])
+async def query_all_comprehensive(auth=Depends(get_current_admin_user), db=Depends(get_db)):
+    return await get_all_comprehensive(db)
+
+
+@app.post("/admin/comprehensive/setCurrent")
+async def set_current_comprehensive(semester: IChangeComprehensive, auth=Depends(get_current_admin_user),
+                                    db=Depends(get_db)):
+    await set_current_comprehensive_db(db, semester=semester.semester)
+
+
+@app.get("/user/comprehensive/query", response_model=Union[ICurrentComprehensive, None])
+async def query_current_comprehensive(db=Depends(get_db)):
+    return await get_current_comprehensive(db)
+
+
+@app.get("/user/comprehensive/getForm")
+async def get_comprehensive_form(auth=Depends(get_current_active_user)):
+    return parse_xml('./config/xlsx_format_xml.xml')
 
 
 add_pagination(app)

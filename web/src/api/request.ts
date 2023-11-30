@@ -1,4 +1,5 @@
-import axios, {AxiosRequestConfig} from 'axios'
+import axios, {AxiosError, AxiosRequestConfig} from 'axios'
+import {ElMessage} from "element-plus";
 
 export async function request<T>(config: AxiosRequestConfig<any>): Promise<T> {
   const instance = axios.create({
@@ -19,7 +20,9 @@ export async function request<T>(config: AxiosRequestConfig<any>): Promise<T> {
   instance.interceptors.response.use(resource => {
     if (resource.status === 200) return resource
     return Promise.reject(new Error(resource.data))
-  }, error => Promise.reject(error.response ? error.response.data : error))
+  }, (error: AxiosError) => {
+    return Promise.reject(error.response ? error.response.data : error.code)
+  })
 
   return instance.request<T>(config).then(res => res.data)
 }

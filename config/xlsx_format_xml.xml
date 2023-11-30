@@ -2,32 +2,42 @@
 <root>
   <project name="德育">
     <add>
-      <cell serialNubmer="1.1.1" content="助人为乐、拾金不昧、见义勇为等先进事迹，以登报为准；参加校组织献血活动，以献血证为依据" standard="1,2" at="f4" codename="xianxue"/>
-      <cell serialNubmer="1.2.1" content="讲诚信，按时交纳各项费用加 1 分（以财务处提供未缴费名单为准）" standard="1" at="f5" allowNoEvidence="true" codename="anshijiaoxuefei"/>
-      <cell serialNubmer="1.2.2" content="学生干部任职半年以上且工作认真负责，热心为同学服务，能以身作则(身兼多职的学生干部以任职最高级别认定)">
+      <cell serialNumber="1.1.1" content="助人为乐、拾金不昧、见义勇为等先进事迹，以登报为准；参加校组织献血活动，以献血证为依据" standard="1,2" at="f4" codename="xianxue"/>
+      <cell serialNumber="1.2.1" content="讲诚信，按时交纳各项费用加 1 分（以财务处提供未缴费名单为准）" standard="1" at="f5" allowNoEvidence="true" codename="anshijiaoxuefei"/>
+      <cell serialNumber="1.2.2" content="学生干部任职半年以上且工作认真负责，热心为同学服务，能以身作则(身兼多职的学生干部以任职最高级别认定)" single="true">
         <sub-cell content="一级干部" standard="5" at="f6" codename="yijiganbu"/>
         <sub-cell content="二级干部" standard="4" at="f7" codename="erjiganbu"/>
         <sub-cell content="三级干部" standard="3" at="f8" codename="sanjiganbu"/>
         <sub-cell content="宿舍长、其他班委会委员" standard="1,2" at="f9" codename="susheizhang"/>
       </cell>
-      <cell serialNubmer="1.2.3" content="在国家、省、市、校、院级">
+      <cell serialNumber="1.2.3" content="在国家、省、市、校、院级">
         <sub-cell content="先进个人（或优秀事迹在媒体报道的）" standard="1,2,3,4,5" at="f10" multiple="true" codename="xianjinggeren"/>
         <sub-cell content="先进集体成员" standard="0.4,0.5,1,1.5,2" at="f11" codename="xianjingjitichengyuan"/>
         <sub-cell content="院级评为月之星" standard="0.5" at="f12" codename="yuezhixing"/>
       </cell>
-      <cell serialNubmer="1.2.4" value="志愿服务，以有考核人签字的志愿工作服务记录卡为准；校外志愿服务需出具相关证明材料。">
+      <cell serialNumber="1.2.4" content="志愿服务，以有考核人签字的志愿工作服务记录卡为准；校外志愿服务需出具相关证明材料。">
         <sub-cell content="每学期校内志愿服务超过20个小时（非国家励志奖学金获得者）" standard="2" at="f13" codename="zhiyuanshichang20h"/>
       </cell>
-      <cell serialNubmer="1.2.5" value="暑期优秀实践团队">
+      <cell serialNumber="1.2.5" content="暑期优秀实践团队">
         <sub-cell content="省市级" standard="2" at="f14" codename="shijianshengji"/>
         <sub-cell content="校级" standard="1" at="f15" codename="shijianxiaoji"/>
         <sub-cell content="院级" standard="0.5" at="f16" codename="shijianyuanji"/>
       </cell>
-      <cell serialNubmer="1.2.6" value="“朋辈榜样”">
+      <cell serialNumber="1.2.6" content="“朋辈榜样”">
         <sub-cell content="入选校级“朋辈榜样”宣讲团成员" standard="5" at="f17" codename="ruxuanpbby"/>
         <sub-cell content="校级“朋辈榜样”数据库人员、院级“朋辈榜样”数据库" standard="3,4" at="f18" codename="pbbyjilu"/>
       </cell>
-      <total at="f19" codename="total"/>
+      <total at="f19" codename="I.a.total"/>
     </add>
+    <subtract>
+      <cell serialNumber="1.3.1" content="无故不参加集体活动" standard="1" codename="wugubucanjiahuodong" at="k4" />
+      <cell serialNumber="1.3.2" content="行为规范不文明（凡有酗酒、打架斗殴、赌博、抽烟等影响恶劣的不良行为，根据实际情况及严重程度进行扣分）" standard="1,2,3,4" codename="buliangxingwei" at="k5" />
+      <cell serialNumber="1.3.3" content="影响学校教育教学秩序、生活秩序以及公共场所管理秩序、损害公物" standard="3,4,5" codename="pohuaigongwu" at="k6"/>
+      <cell serialNumber="1.3.4" content="受学校警告、严重警告、记过、留校察看处分" standard="10,15,20,30" codename="chufeng" at="k8"/>
+      <cell serialNumber="1.3.5" content="夜不归宿" standard="1" codename="yebyguisu" at="k9" accumulative="true"/>
+      <cell serialNumber="1.3.6" content="无故不按时缴纳各项费用" standard="1" codename="bujiaofei" at="k10"/>
+      <cell serialNumber="1.3.7" content="班委不参加班级活动、学生会干部干事不参加学院会议" standard="0.5" codename="bucanhui" accumulative="true" at="k11"/>
+      <total at="k19" codename="I.s.total"/>
+    </subtract>
   </project>
 </root>

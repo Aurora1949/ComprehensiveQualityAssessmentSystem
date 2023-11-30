@@ -28,7 +28,8 @@
       </el-form-item>
     </div>
     <el-tag class="my-2">上传文件创建</el-tag>
-    <el-upload :auto-upload="false" :headers="{Authorization: `Bearer ${get_token()}`}" ref="uploadRef" accept=".xlsx" :multiple="false"
+    <el-upload :auto-upload="false" :headers="{Authorization: `Bearer ${get_token()}`}" ref="uploadRef" accept=".xlsx"
+               :multiple="false"
                action="http://127.0.0.1:8000/admin/create_user/excel" :on-success="handleUploadSuccess">
       <template #trigger>
         <el-button type="primary">选择文件</el-button>
@@ -85,7 +86,7 @@
     </el-table-column>
     <el-table-column fixed="right" label="操作">
       <template #default="scope">
-        <el-button type="text" @click="handleEditUser(scope.row)">编辑</el-button>
+        <el-button link type="primary" @click="handleEditUser(scope.row)">编辑</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -135,7 +136,7 @@
         </el-radio-group>
       </el-form-item>
     </el-form>
-    <template #title>
+    <template #header>
       <span>编辑用户: {{ selectUser.extend!.name }}</span>
       {{ '  ' }}
       <el-switch v-model="editLock" :active-icon="LockOpenIcon" :inactive-icon="LockClosedIcon" inline-prompt/>
@@ -177,15 +178,15 @@ const isDialogShow = ref(false)
 const editLock = ref(false)
 const uploadRef = ref<UploadInstance>()
 
-const handleQueryUserList = async () => {
-  await getUserList(queryParam.value).then(res => {
+const handleQueryUserList = () => {
+  getUserList(queryParam.value).then(res => {
     queryUserList.value = res
   }).catch(err => ElMessage({type: "error", message: err.detail}))
 }
 
-const handlePageChange = async (index: number) => {
+const handlePageChange = (index: number) => {
   queryParam.value.page = index
-  await handleQueryUserList()
+  handleQueryUserList()
 }
 
 const handleEditUser = (user: IUser) => {
@@ -198,8 +199,8 @@ const handleCloseEditUser = () => {
   editLock.value = false
 }
 
-const handleResetPassword = async () => {
-  await adminResetUserPassword(selectUser.value.account).then(res => {
+const handleResetPassword = () => {
+  adminResetUserPassword(selectUser.value.account).then(res => {
     ElMessage({
       type: "success",
       message: res.msg
@@ -212,8 +213,8 @@ const handleResetPassword = async () => {
   })
 }
 
-const handleModifyUserInfo = async () => {
-  await adminModifyUserInfo(selectUser.value).then(res => {
+const handleModifyUserInfo = () => {
+  adminModifyUserInfo(selectUser.value).then(res => {
     ElMessage({
       type: "success",
       message: res.msg
@@ -242,7 +243,7 @@ const handleUploadSuccess = (response: any) => {
   console.log(response);
   if (response.err.num > 0) {
     let s = "<ul>"
-    for (let i=0; i<response.err.num; i++) {
+    for (let i = 0; i < response.err.num; i++) {
       s += `<li>${response.err.data[i].name}: ${response.err.data[i].detail}</li>`
     }
     s += "</ul>"
@@ -259,20 +260,20 @@ const handleUploadSuccess = (response: any) => {
   }
 }
 
-const handleCreateUser = async () => {
+const handleCreateUser = () => {
   const data: IUser = {
     account: createNewUser.value.account,
     auth: 0,
     is_active: false,
     extend: {
-      name: createNewUser.value.extend.name,
-      class_name: createNewUser.value.extend?.class_name,
-      duties: createNewUser.value.extend?.duties,
-      uid: createNewUser.value.extend?.uid,
-      gender: createNewUser.value.extend?.gender
+      name: createNewUser.value.extend!.name,
+      class_name: createNewUser.value.extend!.class_name,
+      duties: createNewUser.value.extend!.duties,
+      uid: createNewUser.value.extend!.uid,
+      gender: createNewUser.value.extend!.gender
     }
   }
-  await adminUserCreate(data).then(res => {
+  adminUserCreate(data).then(res => {
     ElMessage({
       type: 'success',
       message: res.msg

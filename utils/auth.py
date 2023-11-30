@@ -6,7 +6,6 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from starlette import status
 
 from database import crud
@@ -16,7 +15,7 @@ from schemas.auth import ITokenData
 
 SECRET_KEY = "6fe8129f0feae6af3484fa1759b62a6764424b0411cb6b0c745584f47c039b34"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

@@ -1,14 +1,13 @@
-import json
 from typing import Optional
 
 from fastapi_pagination.ext.sqlalchemy import paginate
-from openpyxl.styles.builtins import total
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import query
 
+from models.comprehensive import Comprehensive, CurrentComprehensive
 from models.upload import Upload
 from models.user import User, UserInfo
+from schemas.comprehensive import IComprehensive
 from schemas.upload import IUploadFile
 from schemas.user import IUserCreate, IUserCreateByExcel, IUser
 from utils.auth import verify_password, get_password_hash
@@ -129,3 +128,34 @@ async def create_user(db: AsyncSession, user: IUser):
     await db.commit()
     await db.refresh(db_user)
     await db.refresh(db_user_info)
+
+
+async def create_new_comprehensive(db: AsyncSession, comprehensive: IComprehensive):
+    db_comprehensive = Comprehensive(
+        title=comprehensive.title,
+        start_date=comprehensive.start_date,
+        end_date=comprehensive.end_date,
+        semester=comprehensive.semester
+    )
+    db.add(db_comprehensive)
+    await db.commit()
+    await db.refresh(db_comprehensive)
+    return True
+
+
+async def set_current_comprehensive_db(db: AsyncSession, semester: str):
+    stmt = update(CurrentComprehensive).where(CurrentComprehensive.id == 1).values(semester=semester)
+    await db.execute(stmt)
+    await db.commit()
+
+
+async def get_all_comprehensive(db: AsyncSession) -> list[Comprehensive]:
+    stmt = select(Comprehensive)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_current_comprehensive(db: AsyncSession):
+    stmt = select(CurrentComprehensive)
+    result = await db.execute(stmt)
+    return result.scalar()

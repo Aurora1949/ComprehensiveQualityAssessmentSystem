@@ -37,6 +37,11 @@ const router = createRouter({
           path: "/panel/manage",
           component: () => import("@/views/panel/child/PanelManageView.vue"),
           name: "panelManage"
+        },
+        {
+          path: "/panel/comprehensive",
+          component: () => import("@/views/panel/child/PanelComprehensiveView.vue"),
+          name: "panelComprehensive"
         }
       ]
     }

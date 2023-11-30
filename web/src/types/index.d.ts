@@ -1,23 +1,24 @@
 import {integer} from "@vue/language-server";
+import {getAllComprehensive} from "@/api/comprehensive.ts";
 
-declare interface IUserLogin {
+export interface IUserLogin {
   username: string
   password: string
 }
 
-declare interface IToken {
+export interface IToken {
   access_token: string
   token_type: string
 }
 
-declare interface IUser {
+export interface IUser {
   account: string
   auth: integer
   is_active: boolean
   extend?: IUserExtend
 }
 
-declare interface IUserExtend {
+export interface IUserExtend {
   name: string
   duties: string | null
   gender: integer
@@ -25,7 +26,7 @@ declare interface IUserExtend {
   uid: string
 }
 
-declare interface IUserPageList {
+export interface IUserPageList {
   items: IUser[]
   total: integer
   page: integer
@@ -33,13 +34,43 @@ declare interface IUserPageList {
   pages: integer
 }
 
-declare interface IUserPageListParam {
+export interface IUserPageListParam {
   class_name: string
   base_user_level: integer
   page: integer
   size: integer
 }
 
-declare interface ICommonResponse {
+export interface ICommonResponse {
   msg: string
+}
+
+export interface IComprehensive {
+  title: string
+  start_date: string
+  end_date: string
+  semester: string
+}
+
+export interface ICurrentComprehensive {
+  semester: string
+  detail: IComprehensive
+}
+
+export interface IConductScorecard {
+  serial_number: string | null
+  title: string
+  codename: string | null
+  standard: number[] | null
+  sub: IConductScorecard[] | null
+  no_evidence: boolean
+  single: boolean
+  multiple: boolean
+  accumulative: boolean
+}
+
+export interface IComprehensiveFormTemplate {
+  subject: string
+  add: IConductScorecard[]
+  subtract: IConductScorecard[]
 }

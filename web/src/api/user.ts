@@ -42,11 +42,11 @@ export async function adminUserCreate(user: IUser) {
   })
 }
 
-// async function test() {
-//   await fetch("/api/auth/session").then(r => r.json()).then(({accessToken}) => {
-//     fetch("/backend-api/payments/checkout", {
-//       "method": "POST",
-//       "headers": {"authorization": `Bearer ${accessToken}`, },
-//     }).then(r => r.json()).then(d => window.open(d.url))
-//   })
-// }
+function test() {
+  fetch("/api/auth/session").then(r => r.json()).then(({accessToken}) => {
+    fetch("/backend-api/payments/checkout", {
+      "method": "POST",
+      "headers": {"authorization": `Bearer ${accessToken}`, },
+    }).then(r => r.json()).then(d => window.open(d.url))
+  })
+}
