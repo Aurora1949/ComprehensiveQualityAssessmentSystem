@@ -13,10 +13,12 @@ def parse_xml(xml_path: str):
     d: dict = {}
     lst = []
     for project in projects:
+        p_list = NodeList()
+        p_list.append(project)
         project_name = project.getAttribute('name')
         d[project_name] = {"add": {}, "subtract": {}}
-        visit_all_nodes(projects, check_add, d[project_name]['add'])
-        visit_all_nodes(projects, check_subtract, d[project_name]['subtract'])
+        visit_all_nodes(p_list, check_add, d[project_name]['add'])
+        visit_all_nodes(p_list, check_subtract, d[project_name]['subtract'])
     for item in d:
         lst.append({
             'subject': item,
