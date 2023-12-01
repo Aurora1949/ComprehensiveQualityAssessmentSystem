@@ -107,6 +107,8 @@ def dict_to_class(d: dict) -> list[ConductScorecard]:
     lst = []
     for item in d:
         scorecard_instance = ConductScorecard(serial_number=item, **d[item])
+        if sub_list := d[item].get("sub"):
+            scorecard_instance.sub = [ConductScorecard(**i) for i in sub_list]
         lst.append(scorecard_instance)
     return lst
 

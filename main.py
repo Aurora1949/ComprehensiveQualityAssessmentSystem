@@ -181,7 +181,7 @@ async def query_current_comprehensive(db=Depends(get_db)):
     return await get_current_comprehensive(db)
 
 
-@app.get("/user/comprehensive/getForm")
+@app.get("/user/comprehensive/getForm", response_model=list[IComprehensiveFormTemplate])
 async def get_comprehensive_form(auth=Depends(get_current_active_user)):
     return parse_xml('./config/xlsx_format_xml.xml')
 
