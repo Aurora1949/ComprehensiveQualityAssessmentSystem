@@ -4,3 +4,4 @@ passlib[bcrypt]
 openpyxl
 sqlalchemy
 aiosqlite
+fastapi_pagination
