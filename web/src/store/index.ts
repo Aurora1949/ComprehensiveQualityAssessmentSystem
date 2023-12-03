@@ -8,7 +8,20 @@ export const useUserStore = defineStore('user', {
   state: () => ({
     user: new User()
   }),
-  getters: {},
+  getters: {
+    getName(): string {
+      return this.user.extend ? this.user.extend.name : "null"
+    },
+    getSerialNumber(): string {
+      return this.user.account
+    },
+    getClassName(): string {
+      return this.user.extend ? this.user.extend.class_name : "null"
+    },
+    getDuty(): string {
+      return this.user.extend ? this.user.extend.duties ? this.user.extend.duties : "无" : "无"
+    }
+  },
   actions: {
     async updateUserInfo() {
       await getUserInfo().then(res => {
@@ -65,6 +78,12 @@ export const useComprehensiveStore = defineStore('comprehensive', {
     },
     getTitle(): string {
       return this.currentComprehensive.detail.title ? this.currentComprehensive.detail.title : '无'
+    },
+    checkAvailable(): boolean {
+      const startDate = new Date(this.currentComprehensive.detail.start_date)
+      const endDate = new Date(this.currentComprehensive.detail.end_date)
+      const nowDate = new Date()
+      return nowDate >= startDate && nowDate <= endDate
     }
   },
   actions: {

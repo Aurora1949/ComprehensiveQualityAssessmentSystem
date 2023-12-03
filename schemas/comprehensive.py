@@ -35,7 +35,7 @@ class IConductScorecard(BaseModel):
     no_evidence: bool
     single: bool
     multiple: bool
-    accumulative: bool
+    per_time: Optional[int]
 
 
 class IComprehensiveFormTemplate(BaseModel):

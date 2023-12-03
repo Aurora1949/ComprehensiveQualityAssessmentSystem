@@ -1,5 +1,4 @@
-import json
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Iterable
 from xml.dom.minicompat import NodeList
 from xml.dom.minidom import parse, Element, Node, Document
 
@@ -12,13 +11,7 @@ def parse_xml(xml_path: str):
     projects: NodeList = data.getElementsByTagName('project')
     d: dict = {}
     lst = []
-    for project in projects:
-        p_list = NodeList()
-        p_list.append(project)
-        project_name = project.getAttribute('name')
-        d[project_name] = {"add": {}, "subtract": {}}
-        visit_all_nodes(p_list, check_add, d[project_name]['add'])
-        visit_all_nodes(p_list, check_subtract, d[project_name]['subtract'])
+    visit_all_nodes(projects, check_project, d)
     for item in d:
         lst.append({
             'subject': item,
@@ -26,6 +19,13 @@ def parse_xml(xml_path: str):
             'subtract': dict_to_class(d[item]['subtract'])
         })
     return lst
+
+
+def check_project(node: Element, d: dict):
+    project_name = node.getAttribute('name')
+    d[project_name] = {"add": {}, "subtract": {}}
+    visit_all_nodes([node], check_add, d[project_name]['add'])
+    visit_all_nodes([node], check_subtract, d[project_name]['subtract'])
 
 
 def check_add(node: Element, d: dict):
@@ -65,33 +65,37 @@ def save_to_dict(cell: Element, d: dict, key=None):
         if key is None:
             raise KeyError("key must not to be None.")
         d[key] = {"title": cell.getAttribute("content"), "sub": []}
-        if cell.hasAttribute("single"):  # 仅限单选
-            d[key].update({"single": True})
         visit_all_nodes(cell.getElementsByTagName('sub-cell'), save_to_dict, d[key])
+    dic = {}
+    update_dict_attr(cell, "content", dic, attr_name_func=lambda x: "title")
+    update_dict_attr(cell, "codename", dic)
+    update_dict_attr(cell, "standard", dic, value_func=lambda x: [eval(i) for i in x.split(',')])
+    update_dict_attr(cell, "at", dic)
+    update_dict_attr(cell, "allowNoEvidence", dic, lambda x: "no_evidence", lambda x: True)
+    update_dict_attr(cell, "single", dic, value_func=lambda x: True)
+    update_dict_attr(cell, "multiple", dic, value_func=lambda x: True)
+    update_dict_attr(cell, "perTime", dic, lambda x: "per_time", lambda x: int(x))
+
+    if key:
+        d.setdefault(key, {}).update(dic)
     else:
-        dic = {
-            "title": cell.getAttribute("content"),
-            "codename": cell.getAttribute("codename"),
-            "standard": [eval(i) for i in cell.getAttribute("standard").split(',')],
-            "at": cell.getAttribute("at")
-        }
-
-        if cell.hasAttribute("allowNoEvidence"):  # 允许无证明
-            dic.update({"no_evidence": True})
-        if cell.hasAttribute("single"):  # 仅限单选
-            dic.update({"single": True})
-        if cell.hasAttribute("multiple"):
-            dic.update({"multiple": True})  # 允许多项
-        if cell.hasAttribute("accumulative"):
-            dic.update({"accumulative": True})  # 加减分按次
-
-        if key:
-            d[key] = dic
-        else:
-            d["sub"].append(dic)
+        d["sub"].append(dic)
 
 
-def visit_all_nodes(nodes: NodeList, func: Callable[[Node | Element, *[Any, ...]], Any], *args):
+def update_dict_attr(
+        cell: Element,
+        attr_name: str,
+        d: dict,
+        attr_name_func: Callable[[str], str] = lambda x: x,
+        value_func: Callable[[str], Any] = lambda x: x
+):
+    if cell.hasAttribute(attr_name):
+        d.update({
+            attr_name_func(attr_name): value_func(cell.getAttribute(attr_name))
+        })
+
+
+def visit_all_nodes(nodes: Iterable[Node | Element], func: Callable[[Node | Element, *[Any, ...]], Any], *args):
     for c in nodes:
         func(c, *args)
 
@@ -116,7 +120,7 @@ def dict_to_class(d: dict) -> list[ConductScorecard]:
 
 
 if __name__ == '__main__':
-    d = parse_xml('../config/xlsx_format_xml.xml')
+    dd = parse_xml('../config/xlsx_format_xml.xml')
     print()
     # j_data = json.dumps(d, ensure_ascii=False)
     # with open('../files/output.json', 'w+', encoding='utf-8') as f:

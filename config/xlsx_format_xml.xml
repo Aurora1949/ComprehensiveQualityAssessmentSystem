@@ -4,7 +4,7 @@
     <add>
       <cell serialNumber="1.1.1" content="助人为乐、拾金不昧、见义勇为等先进事迹，以登报为准；参加校组织献血活动，以献血证为依据" standard="1,2" at="f4" codename="xianxue"/>
       <cell serialNumber="1.2.1" content="讲诚信，按时交纳各项费用加 1 分（以财务处提供未缴费名单为准）" standard="1" at="f5" allowNoEvidence="true" codename="anshijiaoxuefei"/>
-      <cell serialNumber="1.2.2" content="学生干部任职半年以上且工作认真负责，热心为同学服务，能以身作则(身兼多职的学生干部以任职最高级别认定)" single="true">
+      <cell serialNumber="1.2.2" content="学生干部任职半年以上且工作认真负责，热心为同学服务，能以身作则(身兼多职的学生干部以任职最高级别认定)" single="true" allowNoEvidence="true">
         <sub-cell content="一级干部" standard="5" at="f6" codename="yijiganbu"/>
         <sub-cell content="二级干部" standard="4" at="f7" codename="erjiganbu"/>
         <sub-cell content="三级干部" standard="3" at="f8" codename="sanjiganbu"/>
@@ -34,10 +34,68 @@
       <cell serialNumber="1.3.2" content="行为规范不文明（凡有酗酒、打架斗殴、赌博、抽烟等影响恶劣的不良行为，根据实际情况及严重程度进行扣分）" standard="1,2,3,4" codename="buliangxingwei" at="k5" />
       <cell serialNumber="1.3.3" content="影响学校教育教学秩序、生活秩序以及公共场所管理秩序、损害公物" standard="3,4,5" codename="pohuaigongwu" at="k6"/>
       <cell serialNumber="1.3.4" content="受学校警告、严重警告、记过、留校察看处分" standard="10,15,20,30" codename="chufeng" at="k8"/>
-      <cell serialNumber="1.3.5" content="夜不归宿" standard="1" codename="yebyguisu" at="k9" accumulative="true"/>
+      <cell serialNumber="1.3.5" content="夜不归宿" standard="1" codename="yebyguisu" at="k9" perTime="1"/>
       <cell serialNumber="1.3.6" content="无故不按时缴纳各项费用" standard="1" codename="bujiaofei" at="k10"/>
-      <cell serialNumber="1.3.7" content="班委不参加班级活动、学生会干部干事不参加学院会议" standard="0.5" codename="bucanhui" accumulative="true" at="k11"/>
+      <cell serialNumber="1.3.7" content="班委不参加班级活动、学生会干部干事不参加学院会议" standard="0.5" codename="bucanhui" perTime="1" at="k11"/>
       <total at="k19" codename="I.s.total"/>
+    </subtract>
+  </project>
+  <project name="智育">
+    <add>
+      <cell serialNumber="2.2.1" content="参加实践创新训练计划项目">
+        <sub-cell content="省重点、省一般、校级立项（参与人按名单顺序递减0.5分）" standard="2,4,5" at="f20" codename="chuangxingxiangmu" />
+      </cell>
+      <cell serialNumber="2.2.2" content="国家、省、市、校、院级各类学科竞赛和科技创新活动">
+        <sub-cell content="个人获奖者（按获奖等次递减0.5）" standard="1.5,2,3,4,5" at="f21" codename="gerenhuojiang"/>
+        <sub-cell content="校级征文大赛获奖" standard="1" codename="xiaojizhenwendasai" at="f22"/>
+        <sub-cell content="获得团体奖的个人" standard="0.5,1,1.5,2,3" codename="tuantijiang" at="f23"/>
+      </cell>
+      <cell serialNumber="2.2.3.1" content="CET4、CET6（均不可重复加分）" standard="2,4" codename="cet" at="f24"/>
+      <cell serialNumber="2.2.3.2" content="通过省教育厅组织的计算机等级考试二级、三级（均不可重复加分）" standard="2,4" codename="ncre" at="f25"/>
+      <cell serialNumber="2.2.4" content="以金陵科技学院署名公开发表论文，学术论文发表以收到录用通知书或正式刊物为准（各类期刊以《中国知网》查询为准）">
+        <sub-cell content="被SCI收录，第一作者" at="f26" codename="sci" standard="5"/>
+        <sub-cell content="被ISTP、EI收录，第一作者" at="f27" codename="istp" standard="4"/>
+        <sub-cell content="国内核心期刊发表的，第一作者" at="f28" codename="hexingqikan" standard="3"/>
+        <sub-cell content="其它省级以上学术刊物发表的，第一作者" at="f29" codename="xueshukanwu" standard="2"/>
+        <sub-cell content="收入全国学术会议论文集的，第一作者" at="f30" codename="guolunwenji" standard="1"/>
+        <sub-cell content="收入省级学术会议论文集及内部刊物发表的，第一作者" at="f31" codename="shenlunwenji" standard="0.5"/>
+      </cell>
+      <cell serialNumber="2.2.5" content="校报录用">
+        <sub-cell content="被《金陵科技学院报》、金陵科技学院官微等校级刊物、多媒体平台录用，第一作者" standard="0.5" perTime="2" at="f32"/>
+      </cell>
+      <cell serialNumber="2.2.6" content="专利授权">
+        <sub-cell content="发明专利第一排名、实用新型第一排名" standard="2,3" at="f33" codename="famingzhuanli"/>
+        <sub-cell content="取得专利并转化第一排名（以上三项，第二至第五参加者加一半的分数）" standard="3" at="f34" codename="famingzhuanli"/>
+      </cell>
+      <cell serialNumber="2.2.7" content="获得政府部门鉴定或行业认定的各类专业技术资格证书：高级、中级、初级、不分等级" codename="zhuanyezigezhengshu" at="f35" standard="3,2,1,2"/>
+      <cell serialNumber="2.2.8" content="有创业项目">
+        <sub-cell content="有创业项目并取得营业执照、创业项目在校创业办公室备案" standard="2,5" at="f36" codename="youzhizhao"/>
+        <sub-cell content="创业项目入驻校众创空间、校创业工作室或学院创业实践场地" standard="4" at="f37" codename="youchangdi" />
+      </cell>
+      <cell serialNumber="2.2.9" content="江苏省职业规划大赛，获省、市、校、院级获奖（按获奖等次递减0.5分），积极参加加1分，按获奖最高等次加分" at="f38" standard="1.5,2,3,4" codename="zhiyeguihuadasai"/>
+      <cell serialNumber="2.2.10" content="学习成绩进步超10名" standard="1" at="f39" codename="jinbu"/>
+      <cell serialNumber="2.2.11" content="江苏省大学生就业创业知识竞赛">
+        <sub-cell content="90-100分（含90分、100分）" at="f40" standard="2" codename="jiuye90-100"/>
+        <sub-cell content="80-89分（含80分、89分）" at="f41" standard="1" codename="jiuye80-89"/>
+      </cell>
+      <cell serialNumber="2.2.12" content="智慧树上拓展类课程每门课程">
+        <sub-cell content="90-100分（含90分、100分）" at="f42" standard="1" codename="zhihuishu90-100"/>
+        <sub-cell content="80-89分（含80分、89分）" at="f43" standard="0.8" codename="zhihuishu80-89"/>
+        <sub-cell content="70-79分（含70分、79分）" at="f44" standard="0.5" codename="zhihuishu70-79"/>
+        <sub-cell content="60-69分（含60分、69分）" at="f45" standard="0.3" codename="zhihuishu60-69"/>
+      </cell>
+      <total at="f46" codename="II.a.total"/>
+    </add>
+    <subtract>
+      <cell serialNumber="2.3.1.1" content="课内考勤迟到、早退" codename="chidaozaotui" at="k20" standard="1" perTime="1"/>
+      <cell serialNumber="2.3.1.2" content="旷课（含晚自习）" codename="kuangke" at="k21" standard="2" perTime="1"/>
+      <cell serialNumber="2.3.1.3" content="不遵守课堂纪律（含晚自习）" codename="jilv" standard="1.5" at="k22" perTime="1"/>
+      <cell serialNumber="2.3.2" content="在科技文化活动中发生抄袭、试验或调查数据弄虚作假等严重违反科技文化学术道德" codename="xueshubuduan" standard="6" at="k23"/>
+      <cell serialNumber="2.3.3" content="挂科" at="k25" standard="2" perTime="1"/>
+      <cell serialNumber="2.3.4" content="江苏省大学生就业创业知识竞赛">
+        <sub-cell content="60-79分（含60分、79分）" at="k26" standard="1" codename="jiuye60-79"/>
+        <sub-cell content="59分以下（含59分）" at="k27" standard="2" codename="jiuye59"/>
+      </cell>
     </subtract>
   </project>
 </root>

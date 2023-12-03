@@ -1,5 +1,5 @@
 <template>
-  <left-divider title="创建账户"/>
+  <t-divider title="创建账户" position="left"/>
   <el-form v-model="createNewUser" label-position="left">
     <el-tag class="my-2">手动创建</el-tag>
     <div class="flex gap-2 flex-col lg:flex-row">
@@ -42,7 +42,7 @@
       </template>
     </el-upload>
   </el-form>
-  <left-divider title="管理已有账户"/>
+  <t-divider title="管理已有账户" position="left"/>
   <el-form :model="queryParam" label-width="7rem" label-position="top">
     <div class="flex gap-1.5 flex-col lg:flex-row">
       <el-form-item class="flex-1" label="班级名称">
@@ -167,7 +167,7 @@ import {ElMessage, UploadInstance} from "element-plus";
 import {LockOpenIcon, LockClosedIcon} from '@heroicons/vue/20/solid'
 import {objDeepCopy} from "@/utils";
 import {useUserStore} from "@/store";
-import LeftDivider from "@/components/dividers/LeftDivider.vue";
+import TDivider from "@/components/dividers/TDivider.vue";
 import {User} from "@/types/user.ts";
 
 const queryParam = ref<IUserPageListParam>({base_user_level: 0, class_name: "", page: 1, size: 10})

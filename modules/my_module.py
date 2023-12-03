@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 
 class BaseContent:
@@ -31,25 +31,25 @@ class ConductScorecard:
     serial_number: Optional[str]
     title: str
     codename: Optional[str]
-    standard: Optional[list[int, float]]
+    standard: Optional[list[Union[int, float]]]
     at: Optional[str]
     sub: Optional[list["ConductScorecard"]]
     no_evidence: bool
     single: bool
     multiple: bool
-    accumulative: bool
+    per_time: Optional[int]
 
     def __init__(self,
                  title: str,
                  serial_number: Optional[str] = None,
                  codename: Optional[str] = None,
-                 standard: Optional[list[int, float]] = None,
+                 standard: Optional[list[Union[int, float]]] = None,
                  at: Optional[str] = None,
                  sub: Optional[list['ConductScorecard']] = None,
                  no_evidence: bool = False,
                  single: bool = False,
                  multiple: bool = False,
-                 accumulative: bool = False
+                 per_time: Optional[int] = None
                  ):
         self.serial_number = serial_number
         self.title = title
@@ -60,9 +60,9 @@ class ConductScorecard:
         self.no_evidence = no_evidence
         self.single = single
         self.multiple = multiple
-        self.accumulative = accumulative
+        self.per_time = per_time
 
     def __str__(self):
         return f"ConductScorecard(serial_number={self.serial_number}, title={self.title}, codename={self.codename}, " \
                f"standard={self.standard}, at={self.at}, sub={self.sub}, no_evidence={self.no_evidence}, " \
-               f"single={self.single}, multiple={self.multiple}, accumulative={self.accumulative})"
+               f"single={self.single}, multiple={self.multiple}, per_time={self.per_time})"

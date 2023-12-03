@@ -25,7 +25,7 @@ const router = createRouter({
         },
         {
           path: "/panel/assessment",
-          component: () => import("@/views/panel/child/AssessmentView.vue"),
+          component: () => import("@/views/panel/child/PanelAssessmentView.vue"),
           name: "panelAssessment"
         },
         {

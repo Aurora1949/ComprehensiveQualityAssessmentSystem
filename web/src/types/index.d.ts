@@ -66,7 +66,7 @@ export interface IConductScorecard {
   no_evidence: boolean
   single: boolean
   multiple: boolean
-  accumulative: boolean
+  per_time: integer | null
 }
 
 export interface IComprehensiveFormTemplate {

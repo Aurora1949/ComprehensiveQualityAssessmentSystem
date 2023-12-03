@@ -1,5 +1,5 @@
 <template>
-  <left-divider title="当前综测"/>
+  <t-divider title="当前综测" position="left"/>
   <el-form label-position="left">
     <p class="text-sm">当前进行的综测学期：<strong>{{ currentComprehensive.semester }}</strong></p>
     <el-form-item label="修改进行的综测学期">
@@ -8,7 +8,7 @@
       </el-select>
     </el-form-item>
   </el-form>
-  <left-divider title="添加新综测"/>
+  <t-divider title="添加新综测" position="left"/>
   <el-form :model="createComprehensive">
     <el-form-item label="标题">
       <el-input placeholder="例如：20xx-20xx学年第x学期综合素质评价" v-model="createComprehensive.title"
@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 
-import LeftDivider from "@/components/dividers/LeftDivider.vue";
+import TDivider from "@/components/dividers/TDivider.vue";
 import {onMounted, ref} from "vue";
 import {
   changeCurrentComprehensive,

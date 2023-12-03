@@ -51,13 +51,6 @@ async def runtime_init_db():
     await init_db()
 
 
-@app.get('/hello')
-@record_fatal_error
-def say_hello():
-    a = None
-    return "hello world"
-
-
 @app.post('/register')
 @record_fatal_error
 async def register_new_user(user: IUserCreate, db: AsyncSession = Depends(get_db)):
