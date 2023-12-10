@@ -1,5 +1,4 @@
 import {integer} from "@vue/language-server";
-import {getAllComprehensive} from "@/api/comprehensive.ts";
 
 export interface IUserLogin {
   username: string
@@ -67,6 +66,7 @@ export interface IConductScorecard {
   single: boolean
   multiple: boolean
   per_time: integer | null
+  at: string | null
 }
 
 export interface IComprehensiveFormTemplate {
@@ -74,3 +74,29 @@ export interface IComprehensiveFormTemplate {
   add: IConductScorecard[]
   subtract: IConductScorecard[]
 }
+
+// type BaseConductScorecard = {
+//   title: string;
+//   no_evidence: boolean;
+//   single: boolean;
+//   multiple: boolean;
+//   per_time: number | null;
+// };
+//
+// type ConductScorecardWithSub = BaseConductScorecard & {
+//   serial_number: null;
+//   codename: null;
+//   standard: null;
+//   at: null;
+//   sub: IConductScorecard[];
+// };
+//
+// type ConductScorecardWithoutSub = BaseConductScorecard & {
+//   serial_number: string;
+//   codename: string;
+//   standard: number[];
+//   at: string;
+//   sub: null;
+// };
+//
+// export type IConductScorecard = ConductScorecardWithSub | ConductScorecardWithoutSub;

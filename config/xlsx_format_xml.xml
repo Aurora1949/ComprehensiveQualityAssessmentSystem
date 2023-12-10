@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <root>
-  <project name="德育">
+  <project name="I.德育">
     <add>
       <cell serialNumber="1.1.1" content="助人为乐、拾金不昧、见义勇为等先进事迹，以登报为准；参加校组织献血活动，以献血证为依据" standard="1,2" at="f4" codename="xianxue"/>
       <cell serialNumber="1.2.1" content="讲诚信，按时交纳各项费用加 1 分（以财务处提供未缴费名单为准）" standard="1" at="f5" allowNoEvidence="true" codename="anshijiaoxuefei"/>
@@ -40,7 +40,7 @@
       <total at="k19" codename="I.s.total"/>
     </subtract>
   </project>
-  <project name="智育">
+  <project name="II.智育">
     <add>
       <cell serialNumber="2.2.1" content="参加实践创新训练计划项目">
         <sub-cell content="省重点、省一般、校级立项（参与人按名单顺序递减0.5分）" standard="2,4,5" at="f20" codename="chuangxingxiangmu" />
@@ -96,6 +96,56 @@
         <sub-cell content="60-79分（含60分、79分）" at="k26" standard="1" codename="jiuye60-79"/>
         <sub-cell content="59分以下（含59分）" at="k27" standard="2" codename="jiuye59"/>
       </cell>
+    </subtract>
+  </project>
+  <project name="III.体艺">
+    <add>
+      <cell serialNumber="3.2.1" content="在国家、省、市、校、院级文化艺术比赛（如：舞蹈、歌曲、摄影、书法、辩论赛、知识竞赛等）、体育比赛">
+        <sub-cell content="获得个人奖项（按获奖名次分别递减0.5分）" at="f47" codename="tiyibisaigerenjiang" standard="1,2,3,4,5"/>
+        <sub-cell content="获得团体奖的个人" at="f48" standard="3,2,1.5,1,0.5" codename="tiyibisaituantigerenjiang"/>
+      </cell>
+      <cell serialNumber="3.2.2" content="积极为学院、班级做出贡献的同学">
+        <sub-cell content="参加篮球队、啦啦队、辩论赛、话剧、心理剧；晋级校级" at="f49" codename="lanqiudui" standard="1,2"/>
+        <sub-cell content="啦啦操、大合唱、广播操" at="f50" codename="lalacao" standard="3"/>
+      </cell>
+      <cell serialNumber="3.2.3" content="非毕业班健步走">
+        <sub-cell content="上学期早锻炼达到20次以上（不包括20次）超过1次加0.4分" at="f51" codename="chenpao20" standard="0.4" perTime="1"/>
+        <sub-cell content="上学期平时锻炼达到20次以上（不包括20次）超过1次加0.2分" at="f52" codename="pinshi20" standard="0.2" perTime="1"/>
+      </cell>
+      <cell serialNumber="3.2.4" content="开设体育课的年级体质测试成绩">
+        <sub-cell content="优秀" at="f53" codename="tizhiyouxiu" standard="2"/>
+        <sub-cell content="良好" at="f53" codename="tizhilianghao" standard="1"/>
+      </cell>
+    </add>
+    <subtract>
+      <cell serialNumber="3.3.1" at="k42" perTime="1" content="未参加学校要求参加的体育活动（如运动会等）" standard="1"/>
+      <cell serialNumber="3.3.2" content="非毕业班学生一学期健步走早锻炼、平时锻炼分别低于20次（不包括20次）">
+        <sub-cell at="f44" content="晨跑" standard="1" perTime="1" codename="chengpaokoufen"/>
+        <sub-cell at="f45" content="平时跑" standard="1" perTime="1" codename="pinshipaokoufen"/>
+      </cell>
+    </subtract>
+  </project>
+  <project name="IV.劳动">
+    <add>
+      <cell serialNumber="4.2.1" content="文明宿舍">
+        <sub-cell content="四星、五星、特色示范宿舍" standard="1,2,3" at="f55" codename="mofansushe"/>
+        <sub-cell content="获奖宿舍的寝室长（额外加分）" standard="0.5" at="f56" codename="mofansushesushezhang"/>
+      </cell>
+      <cell serialNumber="4.2.2" content="积极参加校、院组织的公共区域打扫活动" codename="jijichanjiadasao" standard="0.5" max="2" at="f57"/>
+      <cell serialNumber="4.2.3" content="志愿服务活动">
+        <sub-cell content="学校、学院组织的志愿服务活动" codename="xuexiaozhiyuanfuwu" standard="0.5" perTime="1" max="2" at="f58" />
+      </cell>
+      <cell serialNumber="4.2.4" content="宿舍在学院每周检查宿舍卫生检查中优秀" codename="hongbang" at="f59" perTime="1" standard="0.5"/>
+    </add>
+    <subtract>
+      <cell serialNumber="4.3.1" content="校评比宿舍卫生不合格、违章用电">
+        <sub-cell content="宿舍成员" standard="1" perTime="1" at="k50" codename="weiguidianqichenyuan" />
+        <sub-cell content="寝室长" standard="1.5" perTime="1" at="k51" codename="weiguidianqiqingshizhang" />
+      </cell>
+      <cell serialNumber="4.3.2" codename="weicanjiaxueyuanhuodong" at="k52" standard="1" content="未参加学校、学院要求的活动" perTime="1"/>
+      <cell serialNumber="4.3.3" codename="weidaodawenmingsushe" at="k54" standard="2" content="宿舍未达到文明宿舍标准" />
+      <cell serialNumber="4.3.4" codename="nongxuzuojia" at="k55" standard="2" content="参加校、院劳动活动中有弄虚作假行为" perTime="1"/>
+      <cell serialNumber="4.3.5" codename="heibang" at="k56" standard="0.5" content="院每周检查宿舍卫生检查中不合格" perTime="1"/>
     </subtract>
   </project>
 </root>

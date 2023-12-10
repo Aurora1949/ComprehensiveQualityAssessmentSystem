@@ -33,6 +33,12 @@ export const useUserStore = defineStore('user', {
 
 type Status = "success" | "info" | "warning" | "danger" | "";
 
+export enum ComprehensiveStatus {
+  NotBegin,
+  InProgress,
+  End
+}
+
 export const useComprehensiveStore = defineStore('comprehensive', {
   state: () => ({
     currentComprehensive: {
@@ -52,38 +58,34 @@ export const useComprehensiveStore = defineStore('comprehensive', {
           type: "info",
           msg: "null"
         }
-      const startDate = new Date(this.currentComprehensive.detail.start_date)
-      const endDate = new Date(this.currentComprehensive.detail.end_date)
-      const nowDate = new Date()
-      if (nowDate >= startDate && nowDate < endDate) {
-        return {
-          type: "success",
-          msg: "进行中"
-        }
-      } else if (nowDate < startDate) {
-        return {
-          type: "warning",
-          msg: "未开始"
-        }
-      } else if (nowDate >= startDate) {
-        return {
-          type: "danger",
-          msg: "已结束"
-        }
-      }
-      return {
-        type: "info",
-        msg: "null"
+      switch (this.checkAvailable) {
+        case ComprehensiveStatus.NotBegin:
+          return {
+            type: "warning",
+            msg: "未开始"
+          }
+        case ComprehensiveStatus.InProgress:
+          return {
+            type: "success",
+            msg: "进行中"
+          }
+        case ComprehensiveStatus.End:
+          return {
+            type: "danger",
+            msg: "已结束"
+          }
       }
     },
     getTitle(): string {
       return this.currentComprehensive.detail.title ? this.currentComprehensive.detail.title : '无'
     },
-    checkAvailable(): boolean {
+    checkAvailable(): ComprehensiveStatus {
       const startDate = new Date(this.currentComprehensive.detail.start_date)
       const endDate = new Date(this.currentComprehensive.detail.end_date)
       const nowDate = new Date()
-      return nowDate >= startDate && nowDate <= endDate
+      if (startDate > nowDate) return ComprehensiveStatus.NotBegin
+      else if (endDate < nowDate) return ComprehensiveStatus.End
+      return ComprehensiveStatus.InProgress
     }
   },
   actions: {

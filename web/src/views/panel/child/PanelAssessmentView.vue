@@ -15,6 +15,7 @@
     </div>
   </div>
   <div class="container mx-auto mt-5">
+    <!--  Step 1. 信息确认  -->
     <div class="container" v-if="assessmentStep.step === 1">
       <el-descriptions
           :title="`开始前请核对信息, 目前正在进行的是${comprehensiveStore.getTitle}`"
@@ -36,6 +37,7 @@
         下一步
       </el-button>
     </div>
+    <!--  Step 2. 填写报表  -->
     <div class="container" v-else-if="assessmentStep.step === 2">
       <el-collapse>
         <el-collapse-item v-for="item in comprehensiveFormTemplate" :key="item.subject">
@@ -45,72 +47,58 @@
           <el-form>
             <t-divider class="mt-2" position="center">
               <template #title>
-                <el-tag type="success" effect="dark">加分项目</el-tag>
+                <el-tag type="success" effect="dark" round>加分项目</el-tag>
               </template>
             </t-divider>
             <div class="container divide-y divide-dashed">
               <div v-for="(add, index) in item.add" :key="index" class="mb-2 pt-2">
-                <div class="flex justify-between">
-                  <div>
-                <span class="text-base">
-                <span class="font-bold">{{ add.serial_number }}</span>
-                <span>{{ add.title }}</span>
-              </span>
-                  </div>
-                  <div>
-                    <el-button circle :icon="PlusIcon" title="添加" @click="handleAddClicked(add.serial_number!)"/>
-                  </div>
-                </div>
-                <div class="flex flex-col animate__animated animate__fadeIn"
-                     v-for="(content, index) in comprehensiveFormList!.get(add.serial_number!)!.data">
-                  <div class="flex justify-between my-2">
-                    <div class="flex gap-2">
-                      <el-form-item label="明细" v-if="add.sub">
-                        <el-select v-model="content.select" :disabled="content.disabled">
-                          <el-option v-for="ii in add.sub" :key="ii.title!" :title="ii.title!" :value="ii.title!"/>
-                        </el-select>
-                      </el-form-item>
-                      <el-form-item label="内容">
-                        <el-input :disabled="content.disabled" v-model="content.content"
-                                  placeholder="请输入说明性文字"/>
-                      </el-form-item>
-                      <el-form-item label="分值">
-                        <el-input :disabled="content.disabled" v-model="content.score" type="number"/>
-                      </el-form-item>
-                    </div>
-                    <el-button circle type="danger" :icon="TrashIcon"
-                               @click="handleFormItemDelete(add.serial_number!, index)"/>
-                  </div>
-                  <el-form-item label="" v-if="!add.no_evidence">
-                    <el-upload ref="uploadRef"
-                               action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-                               :auto-upload="false">
-                      <template #trigger>
-                        <el-button type="primary" round :icon="PlusIcon">添加佐证材料</el-button>
-                      </template>
-
-                      <template #default>
-                        <el-button class="ml-3" type="success" @click="" :icon="ArrowUpTrayIcon" round>上传</el-button>
-                      </template>
-
-                      <template #tip>
-                        <div class="el-upload__tip">
-                          仅支持上传图片
-                        </div>
-                      </template>
-                    </el-upload>
-                  </el-form-item>
-                </div>
+                <form-item :subject="add" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked"
+                           @deleteClicked="handleFormItemDelete"/>
               </div>
             </div>
             <t-divider class="my-2" position="center">
               <template #title>
-                <el-tag type="danger" effect="dark">扣分项目</el-tag>
+                <el-tag type="danger" effect="dark" round>扣分项目</el-tag>
               </template>
             </t-divider>
+            <div class="divide-y divide-dashed">
+              <div class="mb-2 pt-2" v-for="(sub, index) in item.subtract" :key="index">
+                <form-item :subject="sub" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked"
+                           @deleteClicked="handleFormItemDelete"/>
+              </div>
+            </div>
           </el-form>
         </el-collapse-item>
       </el-collapse>
+      <div class="sticky bottom-0 bg-white border-t border-dashed">
+        <div class="flex justify-end py-4">
+          <el-button @click="saveAsDraft" class="my-2">保存为草稿</el-button>
+          <el-button type="primary" @click="handleNextStep(2)" class="my-2">下一步</el-button>
+        </div>
+      </div>
+    </div>
+    <!--  Step 3. 预览报表  -->
+    <div v-if="assessmentStep.step === 3">
+      <div v-for="({subject}, index) in comprehensiveFormTemplate">
+        <t-divider :title="subject"/>
+        <div v-for="([key, item], cIndex) in getComprehensiveMapByIndex(index)" :key="cIndex">
+          <div v-if="item.data.length">
+            <div>{{ key }} {{ lookForTitle(key) }}</div>
+            <ul>
+              <li class="pl-4" v-for="i in item.data" :key="i">
+<!--                <span v-if="item.type === 'select'"></span>-->
+                描述: {{ i.content }}
+                分值: <span class="font-bold" :class="{'text-green-600': item.isAdd, 'text-red-600': !item.isAdd}">{{ i.score }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <span class="font-bold">总计: {{ getTotalScore(index) }}</span>
+      </div>
+      <div class="flex justify-end">
+        <el-button @click="handleNextStep(1)" class="">上一步</el-button>
+        <el-button @click="handleSubmitForm" type="primary" class="ml-2">提交</el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -118,12 +106,11 @@
 
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
-import {IComprehensiveFormTemplate} from "@/types";
+import {IComprehensiveFormTemplate, IConductScorecard} from "@/types";
 import {getComprehensiveFormTemplate} from "@/api/comprehensive.ts";
-import {useComprehensiveStore, useUserStore} from "@/store";
+import {ComprehensiveStatus, useComprehensiveStore, useUserStore} from "@/store";
 import {ElMessage} from "element-plus";
 import TDivider from "@/components/dividers/TDivider.vue";
-import {PlusIcon, ArrowUpTrayIcon, TrashIcon} from "@heroicons/vue/20/solid"
 import {integer} from "@vue/language-server";
 import FormItem from "@/components/formitem/FormItem.vue";
 
@@ -138,12 +125,20 @@ const assessmentStep = ref({
   stepFourConfirm: false,
 })
 
-type FormListType = "select" | "text"
+export type FormListType = "select" | "text"
 
-interface FormListItem {
+export interface Standard {
+  per_time: number | null,
+  standard: number[]
+}
+
+export interface FormListItem {
   type: FormListType,
   single: boolean
-  data: any[]
+  data: DataItem[]
+  standard: Map<string, Standard>
+  isAdd: boolean
+  codename: string | null
 }
 
 const comprehensiveFormTemplate = ref<IComprehensiveFormTemplate[]>([])
@@ -154,87 +149,199 @@ const handleNextStep = async (step: number) => {
     case 1:
       if (!assessmentStep.value.stepOneConfirm)
         return
-      if (!comprehensiveStore.checkAvailable) {
-        ElMessage({
-          type: "warning",
-          message: "本期综测还未开始或已结束，请关注综测时间！"
-        })
-        return
+      switch (comprehensiveStore.checkAvailable) {
+        case ComprehensiveStatus.NotBegin:
+          ElMessage({
+            type: "warning",
+            message: "本期综测还未开始，请关注综测时间！"
+          })
+          return
+        case ComprehensiveStatus.End:
+          ElMessage({
+            type: "error",
+            message: "本期综测已结束，请关注综测时间！"
+          })
+          return
       }
-      assessmentStep.value.step += 1
+      assessmentStep.value.step = 2
       assessmentStep.value.progress = 37.5
       break
+    case 2:
+      assessmentStep.value.step = 3
+      assessmentStep.value.progress = 62.5
   }
 }
 
-const handleAddClicked = (sn: string) => {
-  let l = comprehensiveFormList.value!.get(sn)
-  if (!l) return
-  if (l.single && l.data.length === 1) {
+interface DutyMapping {
+  select: string;
+  score: number;
+}
+
+interface DataItem {
+  codename: string | null
+  content: string
+  score: number
+  disabled: boolean
+  select?: string
+}
+
+const validateClick = (item: FormListItem): boolean => {
+  const dataList = item.data
+  if (dataList.length && (!dataList[dataList.length - 1].content || !dataList[dataList.length - 1].score)) {
+    ElMessage({
+      type: "warning",
+      message: "上一项描述或分值未填，不能添加下一项！"
+    })
+    return false
+  }
+  if (!item || (item.single && item.data.length === 1)) {
     ElMessage({
       type: "warning",
       message: "该项仅能添加一次，不可多加!"
-    })
-    return
+    });
+    return false
   }
-  let obj;
-  if (l.type === 'text') {
-    obj = {
-      codename: "",
-      content: "",
-      score: 0,
-      disabled: false
-    }
-  } else if (l.type === 'select') {
-    obj = {
-      codename: "",
-      select: "",
-      content: "",
-      score: 0,
-      disabled: false
-    }
-  }
-  if (sn === '1.2.2') {
-    obj.disabled = true
-    const duty = userStore.getDuty
-    obj.content = duty
-    if (duty === '无') {}
-    else if (duty === '班长' || duty === '团支书' || duty === '班助') {
-      obj.select = '一级干部'
-      obj.score = 5}
-    else if (duty === '宿舍长') {
-      obj.select = '宿舍长、其他班委会委员'
-      obj.score = 2
-    }
-    else {
-      obj.select = '三级干部'
-      obj.score = 3
-    }
-  }
-  l.data.push(obj)
+  return true
 }
 
-const handleGetComprehensiveFormList = (): Map<string, FormListItem> => {
-  let map: Map<string, FormListItem> = new Map()
-  for (const item of comprehensiveFormTemplate.value) {
-    for (const addElement of item.add) {
-      let obj: FormListItem = {
-        type: "text",
-        single: false,
-        data: []
+const handleAddClicked = (sn: string) => {
+  const listItem: FormListItem = comprehensiveFormList.value!.get(sn)!;
+  if (!validateClick(listItem)) return
+
+  let obj: DataItem = {
+    codename: listItem.codename,
+    content: "",
+    score: 0,
+    disabled: false,
+    select: listItem.type === 'select' ? "" : undefined,
+  };
+
+  if (sn === '1.2.2') {
+    obj = handleSpecialCase(obj, userStore.getDuty);
+  }
+
+  listItem.data.push(obj);
+};
+
+const handleSpecialCase = (obj: DataItem, duty: string): DataItem => {
+  obj.disabled = true;
+  obj.content = duty;
+
+  if (duty === '无') {
+    return obj;
+  }
+
+  const dutyMapping: Record<string, DutyMapping> = {
+    '班长': {select: 'yijiganbu', score: 5},
+    '团支书': {select: 'yijiganbu', score: 5},
+    '班助': {select: 'yijiganbu', score: 5},
+    '宿舍长': {select: 'susheizhang', score: 2},
+    // Add other mappings as needed
+  };
+
+  return {...obj, ...dutyMapping[duty] || {select: 'sanjiganbu', score: 3}};
+};
+
+const createFormListItem = (scorecard: IConductScorecard, type: string): FormListItem => ({
+  type: scorecard.sub ? "select" : "text",
+  single: scorecard.single,
+  data: [],
+  standard: new Map<string, Standard>,
+  isAdd: type === 'add',
+  codename: scorecard.codename
+});
+
+const processScorecards = (scorecards: IConductScorecard[], map: Map<string, FormListItem>, type: string) => {
+  for (const scorecard of scorecards) {
+    if (scorecard.serial_number) {
+      const listItem = createFormListItem(scorecard, type);
+      map.set(scorecard.serial_number, listItem);
+      if (scorecard.sub) {
+        for (const iConductScorecard of scorecard.sub) {
+          listItem.standard.set(iConductScorecard.codename!, {
+            per_time: iConductScorecard.per_time,
+            standard: iConductScorecard.standard!
+          })
+        }
       }
-      if (addElement.sub) obj.type = "select"
-      if (addElement.single) obj.single = true
-      map.set(addElement.serial_number!, obj)
     }
   }
-  return map
-}
+};
+
+const handleGetComprehensiveFormList = (): Map<string, FormListItem> => {
+  const formListMap: Map<string, FormListItem> = new Map();
+
+  for (const templateItem of comprehensiveFormTemplate.value) {
+    processScorecards(templateItem.add, formListMap, 'add');
+    processScorecards(templateItem.subtract, formListMap, '');
+  }
+
+  return formListMap;
+};
 
 const handleFormItemDelete = (sn: string, index: integer) => {
   let l = comprehensiveFormList.value!.get(sn)
   if (!l) return
   l.data.splice(index, 1)
+}
+
+const lookForTitle = (sn: string): string => {
+  const index = parseInt(sn.split('.')[0]) - 1
+  const comprehensive = comprehensiveFormTemplate.value[index]
+  const lst = [...comprehensive.add, ...comprehensive.subtract]
+  for (const o of lst) {
+    if (o.serial_number === sn) return o.title
+  }
+  return ""
+}
+
+const getTotalScore = (index: number): number => {
+  let total = 0
+  const sIndex = String(index + 1)
+  for (const [key, value] of comprehensiveFormList.value!) {
+    if (key.split('.')[0] !== sIndex) continue
+    for (const i of value.data) {
+      total += value.isAdd ? parseFloat(String(i.score)) : -1 * parseFloat(String(i.score))
+    }
+  }
+  return total
+}
+
+const getComprehensiveMapByIndex = (index: number): Map<string, FormListItem> => {
+  let map: Map<string, FormListItem> = new Map()
+  for (const [k, v] of comprehensiveFormList.value!) {
+    if (k.split('.')[0] !== String(index + 1)) continue
+    map.set(k, v)
+  }
+  return map
+}
+
+const saveAsDraft = async () => {
+  const data = formDataToObject()
+  console.log(data)
+  ElMessage({
+    "type": "success",
+    "message": "保存成功"
+  })
+}
+
+const formDataToObject = (): Record<string, { score: number, content: string }> => {
+  let obj: Record<string, { score: number, content: string }> = {}
+  for (const [_, {data}] of comprehensiveFormList.value!) {
+    if (!data.length) continue
+    for (const item of data) {
+      obj[item.codename ?? item.select!] = {
+        score: parseFloat(String(item.score)),
+        content: item.content
+      }
+    }
+  }
+  return obj
+}
+
+const handleSubmitForm = async () => {
+  const data = formDataToObject()
+  console.log(data);
 }
 
 onMounted(() => {
