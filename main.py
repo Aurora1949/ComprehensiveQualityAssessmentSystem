@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Union
+from typing import Union
 
 from fastapi import FastAPI, Depends, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
@@ -13,13 +13,12 @@ from database import crud
 from database.crud import create_new_comprehensive, get_all_comprehensive, get_current_comprehensive, \
     set_current_comprehensive_db
 from database.utils import get_db, init_db
-from models.comprehensive import Comprehensive
 from models.user import User
 from schemas.auth import IToken
 from schemas.comprehensive import IComprehensive, ICurrentComprehensive, IChangeComprehensive, \
-    IComprehensiveFormTemplate
+    IComprehensiveFormTemplate, IComprehensiveSaveData, IComprehensiveDataItem
 from schemas.user import IUserCreate, IUser
-from utils.auth import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, get_current_admin_user, \
+from utils.auth import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_admin_user, \
     get_current_super_admin_user, SECRET_KEY, get_current_active_user
 from utils.decorator import record_fatal_error
 from utils.excel import get_student_from_upload_excel
@@ -76,7 +75,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 @app.post("/admin/create_user/excel")
 @record_fatal_error
-async def create_user_by_excel(file: UploadFile, current_user: User = Depends(get_current_admin_user),
+async def create_user_by_excel(file: UploadFile, _: User = Depends(get_current_admin_user),
                                db: AsyncSession = Depends(get_db)):
     error_list = []
     for user in get_student_from_upload_excel(file):
@@ -119,7 +118,7 @@ async def read_user_info(current_user: User = Depends(get_current_active_user), 
 async def set_admin(uid: str,
                     set_type: bool,
                     admin_type: int = 1,
-                    current_user: User = Depends(get_current_super_admin_user),
+                    _: User = Depends(get_current_super_admin_user),
                     db: AsyncSession = Depends(get_db)):
     uid_list = uid.split(';')
     if set_type:
@@ -129,42 +128,42 @@ async def set_admin(uid: str,
 
 @app.get("/admin/get/userList", response_model=Page[IUser])
 async def get_user_list(class_name: str = "", base_user_level: int = 0,
-                        auth=Depends(get_current_super_admin_user), db: AsyncSession = Depends(get_db)):
+                        _=Depends(get_current_super_admin_user), db: AsyncSession = Depends(get_db)):
     return await crud.get_user_list_by_(db, class_name, base_user_level)
 
 
 @app.get("/admin/user/resetPasswd")
-async def reset_password(uid: str, auth=Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
+async def reset_password(uid: str, _=Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     await crud.reset_passwd(db, uid)
     return {"msg": "密码重置成功"}
 
 
 @app.post("/admin/user/modify")
-async def modify_user_info(user: IUser, auth=Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
+async def modify_user_info(user: IUser, _=Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     await crud.update_user_info(db, user)
     return {"msg": "修改成功"}
 
 
 @app.post("/admin/user/create")
-async def create_user(user: IUser, auth=Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
+async def create_user(user: IUser, _=Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     await crud.create_user(db, user)
     return {"msg": "成功"}
 
 
 @app.post("/admin/comprehensive/create")
-async def create_comprehensive(comprehensive: IComprehensive, auth=Depends(get_current_super_admin_user),
+async def create_comprehensive(comprehensive: IComprehensive, _=Depends(get_current_super_admin_user),
                                db=Depends(get_db)):
     await create_new_comprehensive(db, comprehensive)
     return {"msg": "成功"}
 
 
 @app.get("/admin/comprehensive/queryAll", response_model=list[IComprehensive])
-async def query_all_comprehensive(auth=Depends(get_current_admin_user), db=Depends(get_db)):
+async def query_all_comprehensive(_=Depends(get_current_admin_user), db=Depends(get_db)):
     return await get_all_comprehensive(db)
 
 
 @app.post("/admin/comprehensive/setCurrent")
-async def set_current_comprehensive(semester: IChangeComprehensive, auth=Depends(get_current_admin_user),
+async def set_current_comprehensive(semester: IChangeComprehensive, _=Depends(get_current_admin_user),
                                     db=Depends(get_db)):
     await set_current_comprehensive_db(db, semester=semester.semester)
 
@@ -175,8 +174,28 @@ async def query_current_comprehensive(db=Depends(get_db)):
 
 
 @app.get("/user/comprehensive/getForm", response_model=list[IComprehensiveFormTemplate])
-async def get_comprehensive_form(auth=Depends(get_current_active_user)):
+async def get_comprehensive_form(_=Depends(get_current_active_user)):
     return parse_xml('./config/xlsx_format_xml.xml')
 
+
+@app.post("/user/comprehensive/save")
+async def save_comprehensive(data: IComprehensiveSaveData, auth: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
+    if not auth.extend.uid:
+        raise HTTPException(status_code=400, detail="此用户不支持该操作")
+    uid = auth.account
+    semester = data.semester
+    await crud.save_comprehensive_data(db, semester, uid, data)
+    if not data.draft:
+        await crud.change_user_comprehensive_status(db, uid, data.semester, True)
+
+
+@app.get("/user/comprehensive/getData", response_model=list[IComprehensiveDataItem])
+async def get_comprehensive_data(semester: str, current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
+    return await crud.get_comprehensive_data(db, semester, current_user.account)
+
+
+@app.get("/user/comprehensive/available", response_model=bool)
+async def get_comprehensive_data_available(semester:str ,user: User = Depends(get_current_active_user), db: AsyncSession =Depends(get_db)):
+    return await crud.get_user_comprehensive_status(db, uid=user.account, semester=semester)
 
 add_pagination(app)

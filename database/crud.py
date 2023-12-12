@@ -1,13 +1,13 @@
 from typing import Optional
 
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.comprehensive import Comprehensive, CurrentComprehensive
+from models.comprehensive import Comprehensive, CurrentComprehensive, ComprehensiveData, ComprehensiveSubmitStatus
 from models.upload import Upload
 from models.user import User, UserInfo
-from schemas.comprehensive import IComprehensive
+from schemas.comprehensive import IComprehensive, IComprehensiveSaveData
 from schemas.upload import IUploadFile
 from schemas.user import IUserCreate, IUserCreateByExcel, IUser
 from utils.auth import verify_password, get_password_hash
@@ -159,3 +159,79 @@ async def get_current_comprehensive(db: AsyncSession):
     stmt = select(CurrentComprehensive)
     result = await db.execute(stmt)
     return result.scalar()
+
+
+async def save_comprehensive_data(db: AsyncSession, semester: str, uid: str, data: IComprehensiveSaveData):
+    comprehensive_data = data.data
+    stmt = select(ComprehensiveData).where(ComprehensiveData.semester == semester, ComprehensiveData.uid == uid)
+    exist_records = await db.execute(stmt)
+    exist_records = exist_records.scalars().all()
+    exist_codenames_list = [record.codename for record in exist_records]
+    exist_codenames = set(exist_codenames_list)
+    exist_mult_codenames = {codename for codename in exist_codenames_list if exist_codenames_list.count(codename) > 1}
+    data_codenames = [item.codename for item in comprehensive_data]
+    data_mult_codenames = {codename for codename in data_codenames if data_codenames.count(codename) > 1}
+
+    for codename in exist_codenames:
+        if not (codename not in data_codenames or (codename in exist_mult_codenames and codename in data_codenames) or (codename in data_mult_codenames)):
+            continue
+        stmt = delete(ComprehensiveData).where(
+            ComprehensiveData.codename == codename,
+            ComprehensiveData.uid == uid,
+            ComprehensiveData.semester == semester
+        )
+        await db.execute(stmt)
+
+    for data_item in comprehensive_data:
+        stmt = select(ComprehensiveData).where(
+            ComprehensiveData.codename == data_item.codename,
+            ComprehensiveData.uid == uid,
+            ComprehensiveData.semester == semester
+        )
+        record = await db.execute(stmt)
+        record = record.scalars().first()
+        if record:
+            record.content = data_item.content
+            record.score = data_item.score
+        else:
+            new_record = ComprehensiveData(
+                semester=semester,
+                uid=uid,
+                content=data_item.content,
+                score=data_item.score,
+                codename=data_item.codename
+            )
+            db.add(new_record)
+
+    await db.commit()
+
+
+async def get_comprehensive_data(db: AsyncSession, semester: str, uid: str) -> list[ComprehensiveData]:
+    stmt = select(ComprehensiveData).where(ComprehensiveData.semester == semester, ComprehensiveData.uid == uid)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+async def change_user_comprehensive_status(db: AsyncSession, uid: str, semester: str, status: bool) -> None:
+    stmt = select(ComprehensiveSubmitStatus).where(ComprehensiveSubmitStatus.uid == uid, ComprehensiveSubmitStatus.semester==semester)
+    result = await db.execute(stmt)
+    result = result.scalars().first()
+    if result:
+        result.status = status
+    else:
+        new_record = ComprehensiveSubmitStatus(
+            uid=uid,
+            semester=semester,
+            status=status
+        )
+        db.add(new_record)
+    await db.commit()
+
+
+async def get_user_comprehensive_status(db:AsyncSession, uid: str, semester: str) -> bool:
+    stmt = select(ComprehensiveSubmitStatus).where(ComprehensiveSubmitStatus.uid == uid, ComprehensiveSubmitStatus.semester==semester)
+    result = await db.execute(stmt)
+    result = result.scalars().first()
+    if not result:
+        return True
+    return not result.status

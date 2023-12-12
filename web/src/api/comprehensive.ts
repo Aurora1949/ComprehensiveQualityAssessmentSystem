@@ -1,5 +1,11 @@
 import {request} from "@/api/request.ts";
-import {ICommonResponse, IComprehensive, IComprehensiveFormTemplate, ICurrentComprehensive} from "@/types";
+import {
+  ICommonResponse,
+  IComprehensive,
+  IComprehensiveData,
+  IComprehensiveFormTemplate,
+  ICurrentComprehensive
+} from "@/types";
 
 export async function getAllComprehensive() {
   return request<IComprehensive[]>({
@@ -35,5 +41,29 @@ export async function getComprehensiveFormTemplate() {
   return request<IComprehensiveFormTemplate[]>({
     url: '/user/comprehensive/getForm',
     method: 'get'
+  })
+}
+
+export async function saveComprehensiveFormData(formData: IComprehensiveData[], semester: string, saveDraft: boolean) {
+  return request<null>({
+    url: '/user/comprehensive/save',
+    method: 'post',
+    data: {data: formData, semester, draft: saveDraft},
+  })
+}
+
+export async function getComprehensiveFormData(semester: string) {
+  return request<IComprehensiveData[]>({
+    url: '/user/comprehensive/getData',
+    method: 'get',
+    params: {semester}
+  })
+}
+
+export async function getUserComprehensiveStatus(semester: string) {
+  return request<boolean>({
+    url: '/user/comprehensive/available',
+    method: 'get',
+    params: {semester}
   })
 }

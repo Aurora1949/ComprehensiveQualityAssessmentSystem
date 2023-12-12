@@ -1,6 +1,7 @@
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Float, Boolean
+from sqlalchemy.orm import relationship
+
 from database import Base
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
-from sqlalchemy.orm import relationship, backref
 
 
 class Comprehensive(Base):
@@ -19,3 +20,21 @@ class CurrentComprehensive(Base):
     semester = Column(String, ForeignKey("comprehensive.semester"), unique=True)
     # 使用 relationship 来定义反向关系
     detail = relationship("Comprehensive", backref="current_comprehensive", uselist=False, lazy='selectin')
+
+
+class ComprehensiveData(Base):
+    __tablename__ = "c_data"
+    id = Column(Integer, primary_key=True)
+    semester = Column(String, ForeignKey("comprehensive.semester"))
+    uid = Column(String, ForeignKey("users.account"))
+    codename = Column(String, nullable=False)
+    score = Column(Float, nullable=False)
+    content = Column(String, nullable=False)
+
+
+class ComprehensiveSubmitStatus(Base):
+    __tablename__ = "c_submitstatus"
+    id = Column(Integer, primary_key=True)
+    semester = Column(String, ForeignKey("comprehensive.semester"))
+    uid = Column(String, ForeignKey("users.account"))
+    status = Column(Boolean, nullable=False, default=False)

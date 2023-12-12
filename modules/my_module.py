@@ -1,32 +1,6 @@
 from typing import Optional, Union
 
 
-class BaseContent:
-    s_content = ''
-    score_standard = ''
-
-    def __init__(self, content: str, standard: str):
-        self.s_content = content
-        self.score_standard = standard
-
-    def get_content(self):
-        return self.s_content
-
-    def get_score_standard(self):
-        return self.score_standard
-
-
-class Content(BaseContent):
-    m_content = ''
-
-    def __int__(self, m_content: str, content: str, standard: str):
-        self.m_content = content
-        super().__init__(m_content, standard)
-
-    def get_content(self):
-        return self.m_content
-
-
 class ConductScorecard:
     serial_number: Optional[str]
     title: str

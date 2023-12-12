@@ -75,28 +75,8 @@ export interface IComprehensiveFormTemplate {
   subtract: IConductScorecard[]
 }
 
-// type BaseConductScorecard = {
-//   title: string;
-//   no_evidence: boolean;
-//   single: boolean;
-//   multiple: boolean;
-//   per_time: number | null;
-// };
-//
-// type ConductScorecardWithSub = BaseConductScorecard & {
-//   serial_number: null;
-//   codename: null;
-//   standard: null;
-//   at: null;
-//   sub: IConductScorecard[];
-// };
-//
-// type ConductScorecardWithoutSub = BaseConductScorecard & {
-//   serial_number: string;
-//   codename: string;
-//   standard: number[];
-//   at: string;
-//   sub: null;
-// };
-//
-// export type IConductScorecard = ConductScorecardWithSub | ConductScorecardWithoutSub;
+export interface IComprehensiveData {
+  codename: string
+  content: string
+  score: number
+}

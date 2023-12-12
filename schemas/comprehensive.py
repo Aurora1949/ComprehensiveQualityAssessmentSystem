@@ -3,8 +3,6 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
-from modules.my_module import ConductScorecard
-
 
 class IComprehensive(BaseModel):
     title: str
@@ -42,3 +40,17 @@ class IComprehensiveFormTemplate(BaseModel):
     subject: str
     add: list[IConductScorecard]
     subtract: list[IConductScorecard]
+
+
+class IComprehensiveDataItem(BaseModel):
+    codename: str
+    score: Union[int, float]
+    content: str
+
+
+class IComprehensiveSaveData(BaseModel):
+    data: list[IComprehensiveDataItem]
+    draft: bool
+    semester: str
+
+

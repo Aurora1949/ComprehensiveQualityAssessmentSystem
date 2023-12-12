@@ -18,7 +18,7 @@
     <!--  Step 1. 信息确认  -->
     <div class="container" v-if="assessmentStep.step === 1">
       <el-descriptions
-          :title="`开始前请核对信息, 目前正在进行的是${comprehensiveStore.getTitle}`"
+          :title="`开始前请核对信息, 你正在填写的是${comprehensiveStore.getTitle}`"
           direction="vertical"
           :column="4"
           border
@@ -63,8 +63,7 @@
             </t-divider>
             <div class="divide-y divide-dashed">
               <div class="mb-2 pt-2" v-for="(sub, index) in item.subtract" :key="index">
-                <form-item :subject="sub" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked"
-                           @deleteClicked="handleFormItemDelete"/>
+                <form-item :subject="sub" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked" @deleteClicked="handleFormItemDelete"/>
               </div>
             </div>
           </el-form>
@@ -86,9 +85,9 @@
             <div>{{ key }} {{ lookForTitle(key) }}</div>
             <ul>
               <li class="pl-4" v-for="i in item.data" :key="i">
-<!--                <span v-if="item.type === 'select'"></span>-->
                 描述: {{ i.content }}
-                分值: <span class="font-bold" :class="{'text-green-600': item.isAdd, 'text-red-600': !item.isAdd}">{{ i.score }}</span>
+                分值: <span class="font-bold"
+                            :class="{'text-green-600': item.isAdd, 'text-red-600': !item.isAdd}">{{ i.score }}</span>
               </li>
             </ul>
           </div>
@@ -100,14 +99,22 @@
         <el-button @click="handleSubmitForm" type="primary" class="ml-2">提交</el-button>
       </div>
     </div>
+    <!--  Step 4. 提交成功  -->
+    <div v-if="assessmentStep.step === 4">
+      <el-result icon="success" title="提交成功" sub-title="等待评议小组审核，等待期间报表内容不可修改" />
+    </div>
   </div>
 </template>
 
 
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
-import {IComprehensiveFormTemplate, IConductScorecard} from "@/types";
-import {getComprehensiveFormTemplate} from "@/api/comprehensive.ts";
+import {IComprehensiveData, IComprehensiveFormTemplate, IConductScorecard} from "@/types";
+import {
+  getComprehensiveFormData,
+  getComprehensiveFormTemplate, getUserComprehensiveStatus,
+  saveComprehensiveFormData
+} from "@/api/comprehensive.ts";
 import {ComprehensiveStatus, useComprehensiveStore, useUserStore} from "@/store";
 import {ElMessage} from "element-plus";
 import TDivider from "@/components/dividers/TDivider.vue";
@@ -143,8 +150,9 @@ export interface FormListItem {
 
 const comprehensiveFormTemplate = ref<IComprehensiveFormTemplate[]>([])
 const comprehensiveFormList = ref<Map<string, FormListItem>>()
+const comprehensiveUserStatus = ref<boolean>(true)
 
-const handleNextStep = async (step: number) => {
+const handleNextStep = (step: number) => {
   switch (step) {
     case 1:
       if (!assessmentStep.value.stepOneConfirm)
@@ -169,6 +177,10 @@ const handleNextStep = async (step: number) => {
     case 2:
       assessmentStep.value.step = 3
       assessmentStep.value.progress = 62.5
+      break
+    case 3:
+      assessmentStep.value.step = 4
+      assessmentStep.value.progress = 100
   }
 }
 
@@ -224,7 +236,7 @@ const handleAddClicked = (sn: string) => {
 };
 
 const handleSpecialCase = (obj: DataItem, duty: string): DataItem => {
-  obj.disabled = true;
+  obj.disabled = false;
   obj.content = duty;
 
   if (duty === '无') {
@@ -251,29 +263,46 @@ const createFormListItem = (scorecard: IConductScorecard, type: string): FormLis
   codename: scorecard.codename
 });
 
-const processScorecards = (scorecards: IConductScorecard[], map: Map<string, FormListItem>, type: string) => {
+const addSavedDataToList = (list: FormListItem, savedMap: Map<string, { score: number, content: string }[]>, codename: string, type: string | null) => {
+  const savedItem = savedMap.get(codename)
+  if (!savedItem) return
+  for (const item of savedItem) {
+    list.data.push({
+    codename: codename,
+    content: item.content,
+    disabled: false,
+    score: item.score,
+    select: type ?? undefined
+  })
+  }
+}
+
+const processScorecards = (scorecards: IConductScorecard[], map: Map<string, FormListItem>, type: string, savedMap: Map<string, { score: number, content: string }[]>) => {
   for (const scorecard of scorecards) {
-    if (scorecard.serial_number) {
-      const listItem = createFormListItem(scorecard, type);
-      map.set(scorecard.serial_number, listItem);
-      if (scorecard.sub) {
-        for (const iConductScorecard of scorecard.sub) {
-          listItem.standard.set(iConductScorecard.codename!, {
-            per_time: iConductScorecard.per_time,
-            standard: iConductScorecard.standard!
-          })
-        }
-      }
+    if (!scorecard.serial_number) continue
+    const listItem = createFormListItem(scorecard, type);
+    map.set(scorecard.serial_number, listItem);
+
+    if (scorecard.codename) addSavedDataToList(listItem, savedMap, scorecard.codename, null)
+
+    if (!scorecard.sub) continue
+    for (const iConductScorecard of scorecard.sub) {
+      if (iConductScorecard.codename) addSavedDataToList(listItem, savedMap, iConductScorecard.codename, iConductScorecard.codename)
+      listItem.standard.set(iConductScorecard.codename!, {
+        per_time: iConductScorecard.per_time,
+        standard: iConductScorecard.standard!
+      })
     }
   }
 };
 
-const handleGetComprehensiveFormList = (): Map<string, FormListItem> => {
+const handleGetComprehensiveFormList = async () => {
   const formListMap: Map<string, FormListItem> = new Map();
+  const savedDataMap = await getSavedDataMap()
 
   for (const templateItem of comprehensiveFormTemplate.value) {
-    processScorecards(templateItem.add, formListMap, 'add');
-    processScorecards(templateItem.subtract, formListMap, '');
+    processScorecards(templateItem.add, formListMap, 'add', savedDataMap);
+    processScorecards(templateItem.subtract, formListMap, '', savedDataMap);
   }
 
   return formListMap;
@@ -317,38 +346,75 @@ const getComprehensiveMapByIndex = (index: number): Map<string, FormListItem> =>
 }
 
 const saveAsDraft = async () => {
-  const data = formDataToObject()
-  console.log(data)
-  ElMessage({
-    "type": "success",
-    "message": "保存成功"
-  })
+  const data = getComprehensiveDataList()
+  try {
+    await saveComprehensiveFormData(data, comprehensiveStore.getSemester, true)
+    ElMessage({
+      "type": "success",
+      "message": "保存成功"
+    })
+  } catch (e) {
+    ElMessage({
+      "type": "error",
+      "message": "出错啦"
+    })
+  }
 }
 
-const formDataToObject = (): Record<string, { score: number, content: string }> => {
-  let obj: Record<string, { score: number, content: string }> = {}
+const getComprehensiveDataList = (): IComprehensiveData[] => {
+  let lst: IComprehensiveData[] = []
   for (const [_, {data}] of comprehensiveFormList.value!) {
     if (!data.length) continue
     for (const item of data) {
-      obj[item.codename ?? item.select!] = {
-        score: parseFloat(String(item.score)),
-        content: item.content
-      }
+      lst.push({
+        codename: item.codename ?? item.select!,
+        content: item.content,
+        score: parseFloat(String(item.score))
+      })
     }
   }
-  return obj
+  return lst
 }
 
 const handleSubmitForm = async () => {
-  const data = formDataToObject()
-  console.log(data);
+  const data = getComprehensiveDataList()
+  try {
+    await saveComprehensiveFormData(data, comprehensiveStore.getSemester, false)
+    handleNextStep(3)
+  } catch (e) {
+    console.log(e)
+  } finally {
+    console.log(data)
+  }
 }
 
-onMounted(() => {
-  getComprehensiveFormTemplate().then(res => {
-    comprehensiveFormTemplate.value = res
-    comprehensiveFormList.value = handleGetComprehensiveFormList()
-  })
+const getSavedDataMap = async () => {
+  try {
+    const savedData = await getComprehensiveFormData(comprehensiveStore.getSemester)
+    const map = new Map<string, { score: number, content: string }[]>()
+    for (const item of savedData) {
+      let mItem = map.get(item.codename)
+      if (mItem) mItem.push({score: item.score, content: item.content})
+      else map.set(item.codename, [{score: item.score, content: item.content}])
+    }
+    return map
+  } catch (e) {
+    throw e
+  }
+}
+
+onMounted(async () => {
+  try {
+    comprehensiveUserStatus.value = await getUserComprehensiveStatus(comprehensiveStore.getSemester)
+    if (!comprehensiveUserStatus.value) {
+      handleNextStep(3)
+      return
+    }
+    comprehensiveFormTemplate.value = await getComprehensiveFormTemplate()
+    comprehensiveFormList.value = await handleGetComprehensiveFormList()
+  } catch (e) {
+    console.log(e)
+  }
 })
 </script>
 

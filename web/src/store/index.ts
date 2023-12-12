@@ -79,6 +79,9 @@ export const useComprehensiveStore = defineStore('comprehensive', {
     getTitle(): string {
       return this.currentComprehensive.detail.title ? this.currentComprehensive.detail.title : '无'
     },
+    getSemester(): string {
+      return this.currentComprehensive.semester
+    },
     checkAvailable(): ComprehensiveStatus {
       const startDate = new Date(this.currentComprehensive.detail.start_date)
       const endDate = new Date(this.currentComprehensive.detail.end_date)
