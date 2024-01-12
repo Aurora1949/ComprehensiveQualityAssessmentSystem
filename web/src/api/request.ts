@@ -1,9 +1,8 @@
 import axios, {AxiosError, AxiosRequestConfig} from 'axios'
-import {ElMessage} from "element-plus";
 
 export async function request<T>(config: AxiosRequestConfig<any>): Promise<T> {
   const instance = axios.create({
-    baseURL: 'http://127.0.0.1:8000',
+    baseURL: import.meta.env.VITE_API_URL,
     timeout: 5000,
     headers: {},
     withCredentials: true

@@ -68,7 +68,7 @@
             </div>
           </el-form>
         </el-collapse-item>
-      </el-collapse>
+    </el-collapse>
       <div class="sticky bottom-0 bg-white border-t border-dashed">
         <div class="flex justify-end py-4">
           <el-button @click="saveAsDraft" class="my-2">保存为草稿</el-button>
@@ -88,6 +88,8 @@
                 描述: {{ i.content }}
                 分值: <span class="font-bold"
                             :class="{'text-green-600': item.isAdd, 'text-red-600': !item.isAdd}">{{ i.score }}</span>
+                <span v-if="!i.upload" class="italic text-sm text-red-500">{{ " " }}未上传佐证材料</span>
+                <el-button class="ml-1" v-else type="primary" @click="handleShowImageViewer(i.upload)" link>查看佐证材料</el-button>
               </li>
             </ul>
           </div>
@@ -98,6 +100,7 @@
         <el-button @click="handleNextStep(1)" class="">上一步</el-button>
         <el-button @click="handleSubmitForm" type="primary" class="ml-2">提交</el-button>
       </div>
+      <el-image-viewer :url-list="showImageURL" v-if="showImageViewer" @close="handleCloseImageViewer" />
     </div>
     <!--  Step 4. 提交成功  -->
     <div v-if="assessmentStep.step === 4">
@@ -120,6 +123,7 @@ import {ElMessage} from "element-plus";
 import TDivider from "@/components/dividers/TDivider.vue";
 import {integer} from "@vue/language-server";
 import FormItem from "@/components/formitem/FormItem.vue";
+import router from "@/router";
 
 const comprehensiveStore = useComprehensiveStore()
 const userStore = useUserStore()
@@ -151,12 +155,18 @@ export interface FormListItem {
 const comprehensiveFormTemplate = ref<IComprehensiveFormTemplate[]>([])
 const comprehensiveFormList = ref<Map<string, FormListItem>>()
 const comprehensiveUserStatus = ref<boolean>(true)
+const showImageViewer = ref<boolean>(false)
+const showImageURL = ref<string[]>([])
 
 const handleNextStep = (step: number) => {
   switch (step) {
     case 1:
       if (!assessmentStep.value.stepOneConfirm)
         return
+      if (comprehensiveUserStatus.value) {
+        handleNextStep(3)
+        return
+      }
       switch (comprehensiveStore.checkAvailable) {
         case ComprehensiveStatus.NotBegin:
           ElMessage({
@@ -189,12 +199,13 @@ interface DutyMapping {
   score: number;
 }
 
-interface DataItem {
+export interface DataItem {
   codename: string | null
   content: string
   score: number
   disabled: boolean
   select?: string
+  upload: string | null
 }
 
 const validateClick = (item: FormListItem): boolean => {
@@ -226,6 +237,7 @@ const handleAddClicked = (sn: string) => {
     score: 0,
     disabled: false,
     select: listItem.type === 'select' ? "" : undefined,
+    upload: null
   };
 
   if (sn === '1.2.2') {
@@ -263,7 +275,7 @@ const createFormListItem = (scorecard: IConductScorecard, type: string): FormLis
   codename: scorecard.codename
 });
 
-const addSavedDataToList = (list: FormListItem, savedMap: Map<string, { score: number, content: string }[]>, codename: string, type: string | null) => {
+const addSavedDataToList = (list: FormListItem, savedMap: Map<string, { score: number, content: string, upload: string | null }[]>, codename: string, type: string | null) => {
   const savedItem = savedMap.get(codename)
   if (!savedItem) return
   for (const item of savedItem) {
@@ -272,12 +284,13 @@ const addSavedDataToList = (list: FormListItem, savedMap: Map<string, { score: n
     content: item.content,
     disabled: false,
     score: item.score,
-    select: type ?? undefined
+    select: type ?? undefined,
+    upload: item.upload
   })
   }
 }
 
-const processScorecards = (scorecards: IConductScorecard[], map: Map<string, FormListItem>, type: string, savedMap: Map<string, { score: number, content: string }[]>) => {
+const processScorecards = (scorecards: IConductScorecard[], map: Map<string, FormListItem>, type: string, savedMap: Map<string, { score: number, content: string, upload: string | null }[]>) => {
   for (const scorecard of scorecards) {
     if (!scorecard.serial_number) continue
     const listItem = createFormListItem(scorecard, type);
@@ -369,7 +382,8 @@ const getComprehensiveDataList = (): IComprehensiveData[] => {
       lst.push({
         codename: item.codename ?? item.select!,
         content: item.content,
-        score: parseFloat(String(item.score))
+        score: parseFloat(String(item.score)),
+        upload: item.upload
       })
     }
   }
@@ -382,7 +396,10 @@ const handleSubmitForm = async () => {
     await saveComprehensiveFormData(data, comprehensiveStore.getSemester, false)
     handleNextStep(3)
   } catch (e) {
-    console.log(e)
+    ElMessage({
+      type: "error",
+      message: e.detail
+    })
   } finally {
     console.log(data)
   }
@@ -391,11 +408,11 @@ const handleSubmitForm = async () => {
 const getSavedDataMap = async () => {
   try {
     const savedData = await getComprehensiveFormData(comprehensiveStore.getSemester)
-    const map = new Map<string, { score: number, content: string }[]>()
+    const map = new Map<string, { score: number, content: string, upload: string | null }[]>()
     for (const item of savedData) {
       let mItem = map.get(item.codename)
-      if (mItem) mItem.push({score: item.score, content: item.content})
-      else map.set(item.codename, [{score: item.score, content: item.content}])
+      if (mItem) mItem.push({score: item.score, content: item.content, upload: item.upload})
+      else map.set(item.codename, [{score: item.score, content: item.content, upload: item.upload}])
     }
     return map
   } catch (e) {
@@ -403,10 +420,22 @@ const getSavedDataMap = async () => {
   }
 }
 
+const handleShowImageViewer = (filename: string) => {
+  const URL = import.meta.env.VITE_API_URL
+  showImageViewer.value = true
+  showImageURL.value = [URL + "/files/" + filename]
+}
+
+const handleCloseImageViewer = () => {
+  showImageViewer.value = false
+  showImageURL.value = []
+}
+
 onMounted(async () => {
   try {
+    if (comprehensiveStore.getSemester === "") await router.push({name: "panelIndex"})
     comprehensiveUserStatus.value = await getUserComprehensiveStatus(comprehensiveStore.getSemester)
-    if (!comprehensiveUserStatus.value) {
+    if (comprehensiveUserStatus.value) {
       handleNextStep(3)
       return
     }

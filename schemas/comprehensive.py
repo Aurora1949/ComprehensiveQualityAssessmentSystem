@@ -46,11 +46,10 @@ class IComprehensiveDataItem(BaseModel):
     codename: str
     score: Union[int, float]
     content: str
+    upload: Optional[str]
 
 
 class IComprehensiveSaveData(BaseModel):
     data: list[IComprehensiveDataItem]
     draft: bool
     semester: str
-
-

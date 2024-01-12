@@ -30,6 +30,7 @@ class ComprehensiveData(Base):
     codename = Column(String, nullable=False)
     score = Column(Float, nullable=False)
     content = Column(String, nullable=False)
+    upload = Column(String, ForeignKey("upload.hashed_filename"))
 
 
 class ComprehensiveSubmitStatus(Base):

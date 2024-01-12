@@ -2,10 +2,17 @@ from typing import Callable, Any, Iterable
 from xml.dom.minicompat import NodeList
 from xml.dom.minidom import parse, Element, Node, Document
 
+import lxml
+from lxml import etree
+
 from modules.my_module import ConductScorecard
 
 
 def parse_xml(xml_path: str):
+    valid, err = validate_xml_dtd(xml_path, '../config/ComprehensiveFormat-1.0.dtd')
+    if not valid:
+        print(err)
+        raise lxml.etree.DTDValidateError(err)
     dom: Document = parse(xml_path)
     data: Element = dom.documentElement
     projects: NodeList = data.getElementsByTagName('project')
@@ -18,7 +25,19 @@ def parse_xml(xml_path: str):
             'add': dict_to_class(d[item]['add']),
             'subtract': dict_to_class(d[item]['subtract'])
         })
+
     return lst
+
+
+def validate_xml_dtd(xml_path: str, dtd_path: str) -> tuple[bool, list[str]]:
+    # 加载 DTD
+    with open(dtd_path) as f:
+        dtd = etree.DTD(f)
+    # 解析 XML
+    xml_doc = etree.parse(xml_path)
+    # 验证 XML
+    is_valid = dtd.validate(xml_doc)
+    return is_valid, dtd.error_log.filter_from_errors()
 
 
 def check_project(node: Element, d: dict):
@@ -120,7 +139,7 @@ def dict_to_class(d: dict) -> list[ConductScorecard]:
 
 
 if __name__ == '__main__':
-    dd = parse_xml('../config/xlsx_format_xml.xml')
+    dd = parse_xml('../config/not_valid_xml.xml')
     print()
     # j_data = json.dumps(d, ensure_ascii=False)
     # with open('../files/output.json', 'w+', encoding='utf-8') as f:

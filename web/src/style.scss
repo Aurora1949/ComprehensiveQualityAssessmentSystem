@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+// To disable TailwindCSS ring shadow see URL below for more information
+// https://stackoverflow.com/questions/72353450/how-can-i-disable-the-ring-shadow-with-tailwindcss
+input {
+  --tw-ring-shadow: 0 0 #000 !important;
+}
+
+input {
+  @apply ring-offset-0 ring-0
+}

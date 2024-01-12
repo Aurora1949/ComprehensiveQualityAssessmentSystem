@@ -79,4 +79,10 @@ export interface IComprehensiveData {
   codename: string
   content: string
   score: number
+  upload: string | null
+}
+
+export interface IIUploadFileResponse {
+  filename: string
+  hashed_filename: string
 }

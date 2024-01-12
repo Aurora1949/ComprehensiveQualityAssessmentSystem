@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE root SYSTEM "https://rcmc.cc/DTDs/ComprehensiveFormat-1.0.dtd">
 <root>
   <project name="I.德育">
     <add>
@@ -61,7 +62,7 @@
         <sub-cell content="收入省级学术会议论文集及内部刊物发表的，第一作者" at="f31" codename="shenlunwenji" standard="0.5"/>
       </cell>
       <cell serialNumber="2.2.5" content="校报录用">
-        <sub-cell content="被《金陵科技学院报》、金陵科技学院官微等校级刊物、多媒体平台录用，第一作者" standard="0.5" perTime="2" at="f32"/>
+        <sub-cell content="被《金陵科技学院报》、金陵科技学院官微等校级刊物、多媒体平台录用，第一作者" standard="0.5" perTime="2" at="f32" codename="xiaobaodiyizuozhe"/>
       </cell>
       <cell serialNumber="2.2.6" content="专利授权">
         <sub-cell content="发明专利第一排名、实用新型第一排名" standard="2,3" at="f33" codename="famingzhuanli"/>

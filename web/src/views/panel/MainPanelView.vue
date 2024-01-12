@@ -234,14 +234,13 @@ const sidebarOpen = ref(false)
 const userStore = useUserStore()
 const {user} = storeToRefs(userStore)
 
-onMounted(() => {
-  userStore.updateUserInfo().catch(err => {
-    router.push({name: 'login'})
-    console.log(err)
-  })
-  comprehensiveStore.update().catch(err => {
-    console.log(err)
-  })
+onMounted(async () => {
+  try {
+    await Promise.all([userStore.updateUserInfo(), comprehensiveStore.update()])
+  } catch (e) {
+    await router.push({name: 'login'})
+    console.log(e)
+  }
 })
 
 const changeIndex = (index: number) => {

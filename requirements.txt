@@ -1,7 +1,9 @@
-fastapi[all]
-python-jose[cryptography]
-passlib[bcrypt]
-openpyxl
-sqlalchemy
+aiofile
 aiosqlite
+fastapi[all]
 fastapi_pagination
+openpyxl
+passlib[bcrypt]
+python-jose[cryptography]
+sqlalchemy
+lxml

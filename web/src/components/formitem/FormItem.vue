@@ -39,19 +39,24 @@
           <el-input :disabled="content.disabled" v-model="content.content" placeholder="请输入说明性文字"/>
         </el-form-item>
         <el-form-item label="分值">
-          <el-input :disabled="content.disabled" v-model="content.score" type="number" :min="0"/>
+          <el-input :disabled="content.disabled" v-model="content.score" type="number" @wheel.prevent/>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="danger" v-if="content.upload" @click="handleCleanUpload(content)" link>清除佐证材料</el-button>
         </el-form-item>
       </div>
       <el-button circle type="danger" :icon="TrashIcon" @click="handleFormItemDelete(subject.serial_number!, index)"/>
     </div>
-    <el-form-item label="" v-if="!subject.no_evidence">
-      <el-upload ref="uploadRef" action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15" :auto-upload="false">
+    <el-form-item label="" v-if="!subject.no_evidence && !content.upload">
+      <el-upload ref="uploadRef"
+                 action="#"
+                 :auto-upload="true"
+                 :http-request="(options) => {handleUpload(<UploadRequestOptions>options, content)}"
+                 :limit="1"
+                 :show-file-list="false"
+      >
         <template #trigger>
           <el-button type="primary" round :icon="PlusIcon">添加佐证材料</el-button>
-        </template>
-
-        <template #default>
-          <el-button class="ml-3 flex" type="success" @click="" :icon="ArrowUpTrayIcon" round>上传</el-button>
         </template>
 
         <template #tip>
@@ -61,6 +66,7 @@
         </template>
       </el-upload>
     </el-form-item>
+    <el-image v-if="content.upload" class="w-20 h-20" :src="URL + content.upload" :preview-src-list="[URL + content.upload]" />
   </div>
 
 </template>
@@ -68,12 +74,17 @@
 <script setup lang="ts">
 import {ArrowUpTrayIcon, PlusIcon, TrashIcon} from "@heroicons/vue/20/solid"
 import {IConductScorecard} from "@/types";
-import {FormListItem} from "@/views/panel/child/PanelAssessmentView.vue";
+import {FormListItem, DataItem} from "@/views/panel/child/PanelAssessmentView.vue";
+import {UploadRequestOptions} from "element-plus";
+import {uploadFile} from "@/api/user.ts";
+
 
 defineProps<{
   subject: IConductScorecard
   cFormList: Map<string, FormListItem>
 }>()
+
+const URL = import.meta.env.VITE_API_URL + "/files/"
 
 const emit = defineEmits(['addClicked', 'deleteClicked'])
 
@@ -84,9 +95,33 @@ const handleOnAddClicked = (serialNumber: string) => {
 const handleFormItemDelete = (serialNumber: string, index: number) => {
   emit("deleteClicked", serialNumber, index)
 }
+
+const handleUpload = async (options: UploadRequestOptions, dataItem: DataItem) => {
+  try {
+    const formData = new FormData()
+    formData.append('file', options.file)
+    const {filename, hashed_filename} = await uploadFile(formData)
+    dataItem.upload = hashed_filename
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+const handleCleanUpload = (dataItem: DataItem) => {
+  dataItem.upload = null
+}
 </script>
 
 
-<style scoped>
+<style lang="scss">
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield; /* Firefox */
+}
 
 </style>

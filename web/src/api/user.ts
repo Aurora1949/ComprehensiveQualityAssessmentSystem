@@ -1,5 +1,5 @@
 import {request} from "@/api/request.ts";
-import {ICommonResponse, IUser, IUserPageList, IUserPageListParam} from "@/types";
+import {ICommonResponse, IIUploadFileResponse, IUser, IUserPageList, IUserPageListParam} from "@/types";
 
 export async function getUserInfo() {
   return request<IUser>({
@@ -39,6 +39,17 @@ export async function adminUserCreate(user: IUser) {
     url: '/admin/user/create',
     method: 'post',
     data: user
+  })
+}
+
+export async function uploadFile(formData: FormData) {
+  return request<IIUploadFileResponse>({
+    url: '/upload',
+    method: 'post',
+    data: formData,
+    headers: {
+       'Content-Type': 'multipart/form-data'
+    },
   })
 }
 

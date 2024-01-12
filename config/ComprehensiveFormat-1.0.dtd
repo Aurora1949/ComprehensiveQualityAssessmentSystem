@@ -1,0 +1,38 @@
+<!ELEMENT root (project+)>
+<!ELEMENT project (add, subtract, total?)>
+<!ELEMENT add (cell+, total?)>
+<!ELEMENT subtract (cell+, total?)>
+<!ELEMENT cell (sub-cell*)>
+<!ELEMENT sub-cell (#PCDATA)>
+<!ELEMENT total (#PCDATA)>
+
+<!ATTLIST project
+        name CDATA #REQUIRED
+>
+
+<!ATTLIST cell
+        serialNumber CDATA #REQUIRED
+        content CDATA #REQUIRED
+        standard CDATA #IMPLIED
+        at CDATA #IMPLIED
+        codename CDATA #IMPLIED
+        allowNoEvidence (true | false) #IMPLIED
+        single (true | false) #IMPLIED
+        perTime CDATA #IMPLIED
+        max CDATA #IMPLIED
+>
+
+<!ATTLIST sub-cell
+        content CDATA #REQUIRED
+        standard CDATA #REQUIRED
+        at CDATA #REQUIRED
+        codename CDATA #REQUIRED
+        multiple (true | false) #IMPLIED
+        perTime CDATA #IMPLIED
+        max CDATA #IMPLIED
+>
+
+<!ATTLIST total
+        at CDATA #REQUIRED
+        codename CDATA #REQUIRED
+>

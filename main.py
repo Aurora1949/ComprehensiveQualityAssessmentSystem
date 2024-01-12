@@ -1,6 +1,8 @@
+import os
 from datetime import timedelta
 from typing import Union
 
+import aiofile
 from fastapi import FastAPI, Depends, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_pagination import Page, add_pagination
@@ -8,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import StreamingResponse
 
 from database import crud
 from database.crud import create_new_comprehensive, get_all_comprehensive, get_current_comprehensive, \
@@ -17,12 +20,14 @@ from models.user import User
 from schemas.auth import IToken
 from schemas.comprehensive import IComprehensive, ICurrentComprehensive, IChangeComprehensive, \
     IComprehensiveFormTemplate, IComprehensiveSaveData, IComprehensiveDataItem
+from schemas.upload import IUploadFile, IUploadFileResponse
 from schemas.user import IUserCreate, IUser
 from utils.auth import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_admin_user, \
     get_current_super_admin_user, SECRET_KEY, get_current_active_user
 from utils.decorator import record_fatal_error
 from utils.excel import get_student_from_upload_excel
-from utils.functions import is_uid_valid, is_user_exists
+from utils.functions import is_uid_valid, is_user_exists, hashed_string, write_file_to_disk, get_file_md5, read_file, \
+    get_media_type
 from utils.uxml import parse_xml
 
 app = FastAPI()
@@ -184,6 +189,9 @@ async def save_comprehensive(data: IComprehensiveSaveData, auth: User = Depends(
         raise HTTPException(status_code=400, detail="此用户不支持该操作")
     uid = auth.account
     semester = data.semester
+    is_save = await crud.get_user_comprehensive_status(db, uid, semester)
+    if is_save:
+        raise HTTPException(status_code=400, detail="已填报，不可修改")
     await crud.save_comprehensive_data(db, semester, uid, data)
     if not data.draft:
         await crud.change_user_comprehensive_status(db, uid, data.semester, True)
@@ -195,7 +203,38 @@ async def get_comprehensive_data(semester: str, current_user: User = Depends(get
 
 
 @app.get("/user/comprehensive/available", response_model=bool)
-async def get_comprehensive_data_available(semester:str ,user: User = Depends(get_current_active_user), db: AsyncSession =Depends(get_db)):
+async def get_comprehensive_data_available(semester: str, user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
     return await crud.get_user_comprehensive_status(db, uid=user.account, semester=semester)
+
+
+@app.post("/upload", response_model=IUploadFileResponse)
+async def upload_file(file: UploadFile, user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
+    filename = file.filename
+    hashed_filename = await get_file_md5(file)
+    hashed_filename = hashed_string(hashed_filename + user.account)
+    extension_name = filename.rsplit('.', 1)[1]
+    folder_name = hashed_filename[:2]
+    file_path = os.path.join("uploads", folder_name)
+
+    if not os.path.exists(file_path):
+        os.makedirs(file_path)
+
+    file_path = os.path.join(file_path, hashed_filename + "." + extension_name)
+
+    await write_file_to_disk(file_path, file)
+    return await crud.record_upload_file(db, uid=user.account, file_path=file_path, filename=filename, hashed_filename=hashed_filename)
+
+
+@app.get("/files/{hashed_filename}")
+async def read_uploaded_file(hashed_filename: str, db: AsyncSession = Depends(get_db)):
+    try:
+        db_file: IUploadFile = await crud.get_record_files(db, hashed_filename)
+        if db_file is None:
+            raise HTTPException(status_code=404, detail="Not Found")
+
+        return StreamingResponse(await aiofile.async_open(db_file.path, 'rb'), media_type=get_media_type(db_file.path))
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="Found, But not on disk.")
+
 
 add_pagination(app)

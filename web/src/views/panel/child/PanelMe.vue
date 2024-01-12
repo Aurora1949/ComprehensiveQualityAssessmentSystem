@@ -33,11 +33,13 @@
       </dl>
     </div>
   </div>
+  <avatar-uploader/>
 </template>
 
 <script setup lang="ts">
 import {useUserStore} from "@/store";
 import {storeToRefs} from "pinia";
+import AvatarUploader from "@/components/avatar/AvatarUploader.vue";
 
 const userStore = useUserStore()
 const {user} = storeToRefs(userStore)
