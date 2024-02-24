@@ -182,17 +182,15 @@ import {
 import {
   Bars3Icon,
   BellIcon,
-  CalendarIcon,
+  BriefcaseIcon,
   ChartPieIcon,
   Cog6ToothIcon,
-  DocumentDuplicateIcon,
-  FolderIcon,
   HomeIcon,
+  InboxStackIcon,
   UsersIcon,
-  XMarkIcon,
-  InboxStackIcon
+  XMarkIcon
 } from '@heroicons/vue/24/outline'
-import {ChevronDownIcon, MagnifyingGlassIcon} from '@heroicons/vue/20/solid'
+import {ChevronDownIcon} from '@heroicons/vue/20/solid'
 import router from "@/router";
 import {RouteLocationRaw} from "vue-router";
 import avatarM from '@/assets/images/avatar-m.png'
@@ -216,7 +214,8 @@ const navigation: Array<INavigation> = [
   {name: '主页', href: {name: 'panelIndex'}, icon: HomeIcon, current: true, auth: 0},
   {name: '我的综测', href: {name: 'panelAssessment'}, icon: ChartPieIcon, current: false, auth: 0},
   {name: '综测管理', href: {name: 'panelComprehensive'}, icon: InboxStackIcon, current: false, auth: 2},
-  {name: '人员管理', href: {name: 'panelManage'}, icon: UsersIcon, current: false, auth: 1}
+  {name: '综测工作', href: {name: 'panelJob'}, icon: BriefcaseIcon, current: false, auth: 1},
+  {name: '人员管理', href: {name: 'panelManage'}, icon: UsersIcon, current: false, auth: 2}
 ]
 
 const userNavigation = [

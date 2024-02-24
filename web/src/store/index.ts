@@ -1,12 +1,14 @@
 import {defineStore} from "pinia"
-import {User} from "@/types/user.ts";
-import {getUserInfo} from "@/api/user.ts";
-import {ICurrentComprehensive} from "@/types";
+import {JWXTUser, User} from "@/types/user.ts";
+import {bindJWXT, deleteJWXT, getBindData, getUserInfo} from "@/api/user.ts";
+import {ICurrentComprehensive, IJWXTAccount} from "@/types";
 import {getCurrentComprehensive} from "@/api/comprehensive.ts";
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    user: new User()
+    user: new User(),
+    jwxt_user: new JWXTUser(),
+    jwxt_bind: false
   }),
   getters: {
     getName(): string {
@@ -24,9 +26,26 @@ export const useUserStore = defineStore('user', {
   },
   actions: {
     async updateUserInfo() {
-      await getUserInfo().then(res => {
+      getUserInfo().then(res => {
         this.user.update(res)
       }).catch(err => Promise.reject(err))
+    },
+    async updateJWXTInfo() {
+      const data = await getBindData()
+      if (!data) return
+      this.jwxt_user = new JWXTUser(data.education_level, data.eductional_systme, data.faculty, data.specialty, data.uid)
+      this.jwxt_bind = true
+    },
+    async deleteJWXTInfo() {
+      if (!this.jwxt_user.uid) return
+      await deleteJWXT()
+      this.jwxt_user = new JWXTUser()
+      this.jwxt_bind = false
+    },
+    async bindJWXTInfo(jwxt_user: IJWXTAccount) {
+      const data = await bindJWXT(jwxt_user)
+      this.jwxt_user = new JWXTUser(data.education_level, data.eductional_systme, data.faculty, data.specialty, data.uid)
+      this.jwxt_bind = true
     }
   },
 })
@@ -77,7 +96,7 @@ export const useComprehensiveStore = defineStore('comprehensive', {
       }
     },
     getTitle(): string {
-      return this.currentComprehensive.detail.title ? this.currentComprehensive.detail.title : '无'
+      return this.currentComprehensive.detail.title ?? '无'
     },
     getSemester(): string {
       return this.currentComprehensive.semester
@@ -96,7 +115,7 @@ export const useComprehensiveStore = defineStore('comprehensive', {
       try {
         this.currentComprehensive = await getCurrentComprehensive()
       } catch (e) {
-        console.log(e);
+        throw e
       }
     }
   }

@@ -1,9 +1,16 @@
 aiofile
+aiosql
 aiosqlite
+alembic
 fastapi[all]
 fastapi_pagination
 openpyxl
 passlib[bcrypt]
 python-jose[cryptography]
+pydantic-settings
 sqlalchemy
 lxml
+loguru
+School-Api
+pydantic
+starlette

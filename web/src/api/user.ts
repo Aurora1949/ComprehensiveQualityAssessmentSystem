@@ -1,5 +1,14 @@
 import {request} from "@/api/request.ts";
-import {ICommonResponse, IIUploadFileResponse, IUser, IUserPageList, IUserPageListParam} from "@/types";
+import {
+  ICommonResponse,
+  ICourseData,
+  IIUploadFileResponse,
+  IJWXTAccount,
+  IJWXTUser,
+  IUser,
+  IUserPageList,
+  IUserPageListParam
+} from "@/types";
 
 export async function getUserInfo() {
   return request<IUser>({
@@ -48,16 +57,45 @@ export async function uploadFile(formData: FormData) {
     method: 'post',
     data: formData,
     headers: {
-       'Content-Type': 'multipart/form-data'
+      'Content-Type': 'multipart/form-data'
     },
   })
 }
 
-function test() {
-  fetch("/api/auth/session").then(r => r.json()).then(({accessToken}) => {
-    fetch("/backend-api/payments/checkout", {
-      "method": "POST",
-      "headers": {"authorization": `Bearer ${accessToken}`, },
-    }).then(r => r.json()).then(d => window.open(d.url))
+export async function getBindData() {
+  return request<IJWXTUser | null>({
+    url: '/user/bind/info',
+    method: 'get'
   })
 }
+
+export async function bindJWXT(jwxt_user: IJWXTAccount) {
+  return request<IJWXTUser>({
+    url: '/user/bind',
+    method: "post",
+    data: jwxt_user
+  })
+}
+
+export async function deleteJWXT() {
+  return request({
+    url: '/user/bind',
+    method: 'delete'
+  })
+}
+
+export async function getJWXTScore(semester: string) {
+  return request<ICourseData | null>({
+    url: '/user/bind/score',
+    method: 'get',
+    params: {semester}
+  })
+}
+
+export async function getAdminUserIDList() {
+  return request<string[]>({
+    url: '/admin/query/admin',
+    method: 'get'
+  })
+}
+

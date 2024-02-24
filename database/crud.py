@@ -1,14 +1,34 @@
+#  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2024 by Jeffery Hsu
+#  Email: me@cantyonion.site
+#  Created on 2024/02/15
+#  Last Modified on 2024/02/15 05:50:02
+#  #
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#  #
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#  #
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 from typing import Optional
 
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, text, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.comprehensive import Comprehensive, CurrentComprehensive, ComprehensiveData, ComprehensiveSubmitStatus
+from models.comprehensive import Comprehensive, CurrentComprehensive, ComprehensiveData, ComprehensiveSubmitStatus, \
+    ComprehensiveDistribute
 from models.upload import Upload
-from models.user import User, UserInfo
-from schemas.comprehensive import IComprehensive, IComprehensiveSaveData
+from models.user import User, UserInfo, UserJWXT
+from schemas.comprehensive import IComprehensive, IComprehensiveSaveData, IComprehensiveDistribute, IComprehensiveJob
 from schemas.upload import IUploadFile
 from schemas.user import IUserCreate, IUserCreateByExcel, IUser
 from utils.auth import verify_password, get_password_hash
@@ -24,6 +44,18 @@ async def get_user_by_account(db: AsyncSession, account: str) -> Optional[User]:
     stmt = select(User).where(User.account == account)
     results = await db.execute(stmt)
     return results.scalar()
+
+
+async def get_user_by_auth(db: AsyncSession, auth: int) -> list[User]:
+    """
+    根据账户权限查找账户
+    :param db:
+    :param auth:
+    :return:
+    """
+    stmt = select(User).where(User.auth >= auth)
+    results = await db.execute(stmt)
+    return results.scalars().all()
 
 
 async def get_user_by_account_password(db: AsyncSession, account: str, password: str) -> Optional[User]:
@@ -80,7 +112,8 @@ async def create_user_by_xlsx(db: AsyncSession, user: IUserCreateByExcel):
     await db.refresh(db_user_info)
 
 
-async def record_upload_file(db: AsyncSession, uid: str, file_path: str, filename: str, hashed_filename: str) -> IUploadFile:
+async def record_upload_file(db: AsyncSession, uid: str, file_path: str, filename: str,
+                             hashed_filename: str) -> IUploadFile:
     stmt = select(Upload).where(Upload.hashed_filename == hashed_filename)
     result = await db.execute(stmt)
     result = result.scalars().first()
@@ -231,7 +264,8 @@ async def save_comprehensive_data(db: AsyncSession, semester: str, uid: str, dat
     # 查找并删除不需要的记录
     for codename in exist_codenames:
         # 当 codename 不在数据中时，或者 codename 在记录中重复又存在数据中，或者 codename 存在于在数据中重复，我们则删除这条记录
-        if not (codename not in data_codenames or (codename in exist_mult_codenames and codename in data_codenames) or (codename in data_mult_codenames)):
+        if not (codename not in data_codenames or (codename in exist_mult_codenames and codename in data_codenames) or (
+                codename in data_mult_codenames)):
             continue
         stmt = delete(ComprehensiveData).where(
             ComprehensiveData.codename == codename,
@@ -291,7 +325,8 @@ async def change_user_comprehensive_status(db: AsyncSession, uid: str, semester:
     :param status: 要修改的状态， ``True`` 为已提交, ``False`` 为未提交
     :return: ``None``
     """
-    stmt = select(ComprehensiveSubmitStatus).where(ComprehensiveSubmitStatus.uid == uid, ComprehensiveSubmitStatus.semester==semester)
+    stmt = select(ComprehensiveSubmitStatus).where(ComprehensiveSubmitStatus.uid == uid,
+                                                   ComprehensiveSubmitStatus.semester == semester)
     result = await db.execute(stmt)
     result = result.scalars().first()
     if result:
@@ -314,9 +349,149 @@ async def get_user_comprehensive_status(db: AsyncSession, uid: str, semester: st
     :param semester: 学期代号
     :return: ``bool``
     """
-    stmt = select(ComprehensiveSubmitStatus).where(ComprehensiveSubmitStatus.uid == uid, ComprehensiveSubmitStatus.semester==semester)
+    stmt = select(ComprehensiveSubmitStatus).where(ComprehensiveSubmitStatus.uid == uid,
+                                                   ComprehensiveSubmitStatus.semester == semester)
     result = await db.execute(stmt)
     result = result.scalars().first()
     if result is None:
         return False
     return result.status
+
+
+async def create_user_jwxt_bind(db: AsyncSession, account: str, password: str, **kwargs) -> Optional[UserJWXT]:
+    """
+    绑定教务系统
+    :param db:
+    :param account:
+    :param password:
+    :return:
+    """
+    stmt = select(UserJWXT).where(UserJWXT.uid == account)
+    result = await db.execute(stmt)
+    result = result.scalar()
+    if result:
+        return None
+
+    user = UserJWXT(uid=account,
+                    password=password,
+                    faculty=kwargs.get('faculty'),
+                    specialty=kwargs.get('specialty'),
+                    education_level=kwargs.get('education_level'),
+                    eductional_systme=kwargs.get('eductional_systme')
+                    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def get_user_jwxt_info(db: AsyncSession, uid: str) -> Optional[UserJWXT]:
+    """
+
+    :param db:
+    :param uid:
+    :return:
+    """
+    stmt = select(UserJWXT).where(UserJWXT.uid == uid)
+    result = await db.execute(stmt)
+    result = result.scalar()
+    if not result:
+        return None
+    return result
+
+
+async def delete_user_jwxt_info(db: AsyncSession, uid: str) -> None:
+    """
+
+    :param db:
+    :param uid:
+    :return:
+    """
+    stmt = delete(UserJWXT).where(UserJWXT.uid == uid)
+    await db.execute(stmt)
+    await db.commit()
+
+
+async def get_users_comprehensive_list(db: AsyncSession, semester: str):
+    """
+
+    :param db:
+    :param semester:
+    :return:
+    """
+    sql = """
+    users.account, userinfo.name, submitstatus.status, userinfo.class_name
+    from users
+    left join (
+    select users.account, userinfo.uid, c_submitstatus.status
+    from users
+    left join c_submitstatus on users.account = c_submitstatus.uid
+    left join userinfo on users.account = userinfo.uid
+    where c_submitstatus.semester = '{}'
+    ) as submitstatus
+    on submitstatus.uid = users.account
+    left join userinfo on users.account = userinfo.uid
+    where users.account not in (select distribute.user_uid from distribute where distribute.semester='{}')
+    """.format(semester, semester)
+    stmt = select(text(sql))
+
+    return await paginate(db, stmt)
+
+
+async def set_distribute_job(db: AsyncSession, data: IComprehensiveDistribute):
+    """
+
+    :param db:
+    :param data:
+    :return:
+    """
+    stmt = select(ComprehensiveDistribute).where(ComprehensiveDistribute.semester == data.semester)
+    result = await db.execute(stmt)
+    db_list = [x.user_uid for x in result.scalars().all()]
+    u_list = [x for x in data.user_id_list if x not in db_list]
+    e_list = [x for x in data.user_id_list if x in db_list]
+
+    if e_list:
+        return e_list
+
+    for d in u_list:
+        cd = ComprehensiveDistribute(
+            semester=data.semester,
+            admin_uid=data.admin_id,
+            user_uid=d,
+            status=0
+        )
+        db.add(cd)
+
+    await db.commit()
+    return []
+
+
+async def get_my_job(db: AsyncSession, semester: str, uid: str):
+    """
+
+    :param db:
+    :param semester:
+    :param uid:
+    :return:
+    """
+    stmt = (select(UserInfo.name,
+                   UserInfo.class_name,
+                   User.account,
+                   ComprehensiveSubmitStatus.status,
+                   ComprehensiveDistribute.status)
+            .outerjoin(UserInfo, UserInfo.uid == User.account)
+            .outerjoin(ComprehensiveSubmitStatus,
+                       and_(ComprehensiveSubmitStatus.uid == User.account,
+                            ComprehensiveSubmitStatus.semester == semester))
+            .outerjoin(ComprehensiveDistribute, ComprehensiveDistribute.user_uid == User.account)
+            .where(ComprehensiveDistribute.admin_uid == uid, ComprehensiveDistribute.semester == semester)
+            )
+    result = await db.execute(stmt)
+    return (IComprehensiveJob(
+        name=row[0],
+        class_name=row[1],
+        account=row[2],
+        submit_status=bool(row[3]),
+        distribute_status=row[4],
+    ) for row in result.fetchall())

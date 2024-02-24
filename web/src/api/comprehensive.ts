@@ -4,7 +4,11 @@ import {
   IComprehensive,
   IComprehensiveData,
   IComprehensiveFormTemplate,
-  ICurrentComprehensive
+  IComprehensiveJob,
+  ICurrentComprehensive,
+  IDistributeJobData,
+  IUserComprehensiveStatusWithClassName,
+  page
 } from "@/types";
 
 export async function getAllComprehensive() {
@@ -52,17 +56,41 @@ export async function saveComprehensiveFormData(formData: IComprehensiveData[], 
   })
 }
 
-export async function getComprehensiveFormData(semester: string) {
+export async function getComprehensiveFormData(semester: string, uid: string | null = null) {
   return request<IComprehensiveData[]>({
     url: '/user/comprehensive/getData',
     method: 'get',
-    params: {semester}
+    params: {semester, uid}
   })
 }
 
 export async function getUserComprehensiveStatus(semester: string) {
   return request<boolean>({
     url: '/user/comprehensive/available',
+    method: 'get',
+    params: {semester}
+  })
+}
+
+export async function getDistributeJob(semester: string, page: number, size: number) {
+  return request<page<IUserComprehensiveStatusWithClassName>>({
+    url: '/admin/job/distribute',
+    method: 'get',
+    params: {semester, page, size}
+  })
+}
+
+export async function distributeJob(data: IDistributeJobData) {
+  return request({
+    url: '/admin/job/distribute',
+    method: 'post',
+    data: data
+  })
+}
+
+export async function getMyJob(semester: string) {
+  return request<IComprehensiveJob[]>({
+    url: '/admin/job/my',
     method: 'get',
     params: {semester}
   })

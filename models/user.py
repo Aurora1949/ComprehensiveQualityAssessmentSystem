@@ -24,3 +24,15 @@ class UserInfo(Base):
     gender = Column(Integer, index=True)  # 0 女 1 男
     class_name = Column(String, index=True)
     uid = Column(String, ForeignKey("users.account"))
+
+
+class UserJWXT(Base):
+    __tablename__ = "jwxt_bind"
+
+    id = Column(Integer, primary_key=True, index=True)
+    uid = Column(String, ForeignKey("users.account"))
+    password = Column(String)
+    faculty = Column(String)
+    specialty = Column(String)
+    education_level = Column(String)
+    eductional_systme = Column(String)

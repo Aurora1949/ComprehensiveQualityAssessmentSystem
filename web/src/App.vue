@@ -1,4 +1,14 @@
 <script setup lang="ts">
+
+import {onMounted} from "vue";
+
+onMounted(async () => {
+  try {
+    
+  } catch (e: any) {
+
+  }
+})
 </script>
 
 <template>

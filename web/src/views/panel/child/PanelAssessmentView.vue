@@ -1,110 +1,115 @@
 <template>
-  <div>
-    <p class="text-sm font-medium text-gray-900">填写综合素质评价报表</p>
-    <div class="mt-6" aria-hidden="true">
-      <div class="overflow-hidden rounded-full bg-gray-200">
-        <div class="h-2 rounded-full bg-indigo-600 transition-all duration-500"
-             :style="`width: ${assessmentStep.progress}%`"/>
-      </div>
-      <div class="mt-6 hidden grid-cols-4 text-sm font-medium text-gray-600 sm:grid">
-        <div :class="{'text-indigo-600': assessmentStep.step >= 1}">确认你的信息</div>
-        <div class="text-center" :class="{'text-indigo-600': assessmentStep.step >= 2}">填写报表</div>
-        <div class="text-center" :class="{'text-indigo-600': assessmentStep.step >= 3}">提交预览</div>
-        <div class="text-right" :class="{'text-indigo-600': assessmentStep.step >= 4}">提交</div>
-      </div>
-    </div>
-  </div>
-  <div class="container mx-auto mt-5">
-    <!--  Step 1. 信息确认  -->
-    <div class="container" v-if="assessmentStep.step === 1">
-      <el-descriptions
-          :title="`开始前请核对信息, 你正在填写的是${comprehensiveStore.getTitle}`"
-          direction="vertical"
-          :column="4"
-          border
-      >
-        <el-descriptions-item label="姓名">{{ userStore.getName }}</el-descriptions-item>
-        <el-descriptions-item label="班级">{{ userStore.getClassName }}</el-descriptions-item>
-        <el-descriptions-item label="学号" :span="2">{{ userStore.getSerialNumber }}</el-descriptions-item>
-        <el-descriptions-item label="职务">{{ userStore.getDuty }}</el-descriptions-item>
-        <el-descriptions-item label="确认">
-          <el-checkbox v-model="assessmentStep.stepOneConfirm"
-                       label="我已核对基本信息确认无误，并已知晓当前期综测通知。"/>
-        </el-descriptions-item>
-      </el-descriptions>
-      <el-button type="primary" class="mt-2 float-right" :disabled="!assessmentStep.stepOneConfirm"
-                 @click="handleNextStep(1)">
-        下一步
-      </el-button>
-    </div>
-    <!--  Step 2. 填写报表  -->
-    <div class="container" v-else-if="assessmentStep.step === 2">
-      <el-collapse>
-        <el-collapse-item v-for="item in comprehensiveFormTemplate" :key="item.subject">
-          <template #title>
-            <span class="text-base font-bold">{{ item.subject }}</span>
-          </template>
-          <el-form>
-            <t-divider class="mt-2" position="center">
-              <template #title>
-                <el-tag type="success" effect="dark" round>加分项目</el-tag>
-              </template>
-            </t-divider>
-            <div class="container divide-y divide-dashed">
-              <div v-for="(add, index) in item.add" :key="index" class="mb-2 pt-2">
-                <form-item :subject="add" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked"
-                           @deleteClicked="handleFormItemDelete"/>
-              </div>
-            </div>
-            <t-divider class="my-2" position="center">
-              <template #title>
-                <el-tag type="danger" effect="dark" round>扣分项目</el-tag>
-              </template>
-            </t-divider>
-            <div class="divide-y divide-dashed">
-              <div class="mb-2 pt-2" v-for="(sub, index) in item.subtract" :key="index">
-                <form-item :subject="sub" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked" @deleteClicked="handleFormItemDelete"/>
-              </div>
-            </div>
-          </el-form>
-        </el-collapse-item>
-    </el-collapse>
-      <div class="sticky bottom-0 bg-white border-t border-dashed">
-        <div class="flex justify-end py-4">
-          <el-button @click="saveAsDraft" class="my-2">保存为草稿</el-button>
-          <el-button type="primary" @click="handleNextStep(2)" class="my-2">下一步</el-button>
+  <div v-loading="loading">
+    <div>
+      <p class="text-sm font-medium text-gray-900">填写综合素质评价报表</p>
+      <div class="mt-6" aria-hidden="true">
+        <div class="overflow-hidden rounded-full bg-gray-200">
+          <div class="h-2 rounded-full bg-indigo-600 transition-all duration-500"
+               :style="`width: ${assessmentStep.progress}%`"/>
+        </div>
+        <div class="mt-6 hidden grid-cols-4 text-sm font-medium text-gray-600 sm:grid">
+          <div :class="{'text-indigo-600': assessmentStep.step >= 1}">确认你的信息</div>
+          <div class="text-center" :class="{'text-indigo-600': assessmentStep.step >= 2}">填写报表</div>
+          <div class="text-center" :class="{'text-indigo-600': assessmentStep.step >= 3}">提交预览</div>
+          <div class="text-right" :class="{'text-indigo-600': assessmentStep.step >= 4}">提交</div>
         </div>
       </div>
     </div>
-    <!--  Step 3. 预览报表  -->
-    <div v-if="assessmentStep.step === 3">
-      <div v-for="({subject}, index) in comprehensiveFormTemplate">
-        <t-divider :title="subject"/>
-        <div v-for="([key, item], cIndex) in getComprehensiveMapByIndex(index)" :key="cIndex">
-          <div v-if="item.data.length">
-            <div>{{ key }} {{ lookForTitle(key) }}</div>
-            <ul>
-              <li class="pl-4" v-for="i in item.data" :key="i">
-                描述: {{ i.content }}
-                分值: <span class="font-bold"
-                            :class="{'text-green-600': item.isAdd, 'text-red-600': !item.isAdd}">{{ i.score }}</span>
-                <span v-if="!i.upload" class="italic text-sm text-red-500">{{ " " }}未上传佐证材料</span>
-                <el-button class="ml-1" v-else type="primary" @click="handleShowImageViewer(i.upload)" link>查看佐证材料</el-button>
-              </li>
-            </ul>
+    <div class="container mx-auto mt-5">
+      <!--  Step 1. 信息确认  -->
+      <div class="container" v-if="assessmentStep.step === 1">
+        <el-descriptions
+            :title="`开始前请核对信息, 你正在填写的是${comprehensiveStore.getTitle}`"
+            direction="vertical"
+            :column="4"
+            border
+        >
+          <el-descriptions-item label="姓名">{{ userStore.getName }}</el-descriptions-item>
+          <el-descriptions-item label="班级">{{ userStore.getClassName }}</el-descriptions-item>
+          <el-descriptions-item label="学号" :span="2">{{ userStore.getSerialNumber }}</el-descriptions-item>
+          <el-descriptions-item label="职务">{{ userStore.getDuty }}</el-descriptions-item>
+          <el-descriptions-item label="确认">
+            <el-checkbox v-model="assessmentStep.stepOneConfirm"
+                         label="我已核对基本信息确认无误，并已知晓当前期综测通知。"/>
+          </el-descriptions-item>
+        </el-descriptions>
+        <el-button type="primary" class="mt-2 float-right" :disabled="!assessmentStep.stepOneConfirm"
+                   @click="handleNextStep(1)">
+          下一步
+        </el-button>
+      </div>
+      <!--  Step 2. 填写报表  -->
+      <div class="container" v-else-if="assessmentStep.step === 2">
+        <el-collapse>
+          <el-collapse-item v-for="item in comprehensiveFormTemplate" :key="item.subject">
+            <template #title>
+              <span class="text-base font-bold">{{ item.subject }}</span>
+            </template>
+            <el-form>
+              <t-divider class="mt-2" position="center">
+                <template #title>
+                  <el-tag type="success" effect="dark" round>加分项目</el-tag>
+                </template>
+              </t-divider>
+              <div class="container divide-y divide-dashed">
+                <div v-for="(add, index) in item.add" :key="index" class="mb-2 pt-2">
+                  <form-item :subject="add" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked"
+                             @deleteClicked="handleFormItemDelete"/>
+                </div>
+              </div>
+              <t-divider class="my-2" position="center">
+                <template #title>
+                  <el-tag type="danger" effect="dark" round>扣分项目</el-tag>
+                </template>
+              </t-divider>
+              <div class="divide-y divide-dashed">
+                <div class="mb-2 pt-2" v-for="(sub, index) in item.subtract" :key="index">
+                  <form-item :subject="sub" :c-form-list="comprehensiveFormList!" @addClicked="handleAddClicked"
+                             @deleteClicked="handleFormItemDelete"/>
+                </div>
+              </div>
+            </el-form>
+          </el-collapse-item>
+        </el-collapse>
+        <div class="sticky bottom-0 bg-white border-t border-dashed">
+          <div class="flex justify-end py-4">
+            <el-button @click="saveAsDraft" class="my-2">保存为草稿</el-button>
+            <el-button type="primary" @click="handleNextStep(2)" class="my-2">下一步</el-button>
           </div>
         </div>
-        <span class="font-bold">总计: {{ getTotalScore(index) }}</span>
       </div>
-      <div class="flex justify-end">
-        <el-button @click="handleNextStep(1)" class="">上一步</el-button>
-        <el-button @click="handleSubmitForm" type="primary" class="ml-2">提交</el-button>
+      <!--  Step 3. 预览报表  -->
+      <div v-if="assessmentStep.step === 3">
+        <div v-for="({subject}, index) in comprehensiveFormTemplate">
+          <t-divider :title="subject"/>
+          <div v-for="([key, item], cIndex) in getComprehensiveMapByIndex(index)" :key="cIndex">
+            <div v-if="item.data.length">
+              <div>{{ key }} {{ lookForTitle(key) }}</div>
+              <ul>
+                <li class="pl-4" v-for="i in item.data" :key="i">
+                  描述: {{ i.content }}
+                  分值: <span class="font-bold"
+                              :class="{'text-green-600': item.isAdd, 'text-red-600': !item.isAdd}">{{ i.score }}</span>
+                  <span v-if="!i.upload" class="italic text-sm text-red-500">{{ " " }}未上传佐证材料</span>
+                  <el-button class="ml-1" v-else type="primary" @click="handleShowImageViewer(i.upload)" link>
+                    查看佐证材料
+                  </el-button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <span class="font-bold">总计: {{ getTotalScore(index) }}</span>
+        </div>
+        <div class="flex justify-end">
+          <el-button @click="handleNextStep(1)" class="">上一步</el-button>
+          <el-button @click="handleSubmitForm" type="primary" class="ml-2">提交</el-button>
+        </div>
+        <el-image-viewer :url-list="showImageURL" v-if="showImageViewer" @close="handleCloseImageViewer"/>
       </div>
-      <el-image-viewer :url-list="showImageURL" v-if="showImageViewer" @close="handleCloseImageViewer" />
-    </div>
-    <!--  Step 4. 提交成功  -->
-    <div v-if="assessmentStep.step === 4">
-      <el-result icon="success" title="提交成功" sub-title="等待评议小组审核，等待期间报表内容不可修改" />
+      <!--  Step 4. 提交成功  -->
+      <div v-if="assessmentStep.step === 4">
+        <el-result icon="success" title="提交成功" sub-title="等待评议小组审核，等待期间报表内容不可修改"/>
+      </div>
     </div>
   </div>
 </template>
@@ -115,13 +120,13 @@ import {onMounted, ref} from "vue";
 import {IComprehensiveData, IComprehensiveFormTemplate, IConductScorecard} from "@/types";
 import {
   getComprehensiveFormData,
-  getComprehensiveFormTemplate, getUserComprehensiveStatus,
+  getComprehensiveFormTemplate,
+  getUserComprehensiveStatus,
   saveComprehensiveFormData
 } from "@/api/comprehensive.ts";
 import {ComprehensiveStatus, useComprehensiveStore, useUserStore} from "@/store";
 import {ElMessage} from "element-plus";
 import TDivider from "@/components/dividers/TDivider.vue";
-import {integer} from "@vue/language-server";
 import FormItem from "@/components/formitem/FormItem.vue";
 import router from "@/router";
 
@@ -135,6 +140,8 @@ const assessmentStep = ref({
   stepThreeConfirm: false,
   stepFourConfirm: false,
 })
+
+const loading = ref<boolean>(true)
 
 export type FormListType = "select" | "text"
 
@@ -275,22 +282,30 @@ const createFormListItem = (scorecard: IConductScorecard, type: string): FormLis
   codename: scorecard.codename
 });
 
-const addSavedDataToList = (list: FormListItem, savedMap: Map<string, { score: number, content: string, upload: string | null }[]>, codename: string, type: string | null) => {
+const addSavedDataToList = (list: FormListItem, savedMap: Map<string, {
+  score: number,
+  content: string,
+  upload: string | null
+}[]>, codename: string, type: string | null) => {
   const savedItem = savedMap.get(codename)
   if (!savedItem) return
   for (const item of savedItem) {
     list.data.push({
-    codename: codename,
-    content: item.content,
-    disabled: false,
-    score: item.score,
-    select: type ?? undefined,
-    upload: item.upload
-  })
+      codename: codename,
+      content: item.content,
+      disabled: false,
+      score: item.score,
+      select: type ?? undefined,
+      upload: item.upload
+    })
   }
 }
 
-const processScorecards = (scorecards: IConductScorecard[], map: Map<string, FormListItem>, type: string, savedMap: Map<string, { score: number, content: string, upload: string | null }[]>) => {
+const processScorecards = (scorecards: IConductScorecard[], map: Map<string, FormListItem>, type: string, savedMap: Map<string, {
+  score: number,
+  content: string,
+  upload: string | null
+}[]>) => {
   for (const scorecard of scorecards) {
     if (!scorecard.serial_number) continue
     const listItem = createFormListItem(scorecard, type);
@@ -321,7 +336,7 @@ const handleGetComprehensiveFormList = async () => {
   return formListMap;
 };
 
-const handleFormItemDelete = (sn: string, index: integer) => {
+const handleFormItemDelete = (sn: string, index: number) => {
   let l = comprehensiveFormList.value!.get(sn)
   if (!l) return
   l.data.splice(index, 1)
@@ -437,10 +452,12 @@ onMounted(async () => {
     comprehensiveUserStatus.value = await getUserComprehensiveStatus(comprehensiveStore.getSemester)
     if (comprehensiveUserStatus.value) {
       handleNextStep(3)
+      loading.value = false
       return
     }
     comprehensiveFormTemplate.value = await getComprehensiveFormTemplate()
     comprehensiveFormList.value = await handleGetComprehensiveFormList()
+    loading.value = false
   } catch (e) {
     console.log(e)
   }

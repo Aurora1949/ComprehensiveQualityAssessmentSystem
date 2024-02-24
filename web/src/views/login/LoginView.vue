@@ -4,7 +4,7 @@
       <div class="mx-auto w-full max-w-sm lg:w-96">
         <div>
           <img class="h-12 w-auto" :src="logo" alt="建筑工程学院"/>
-          <h2 class="mt-8 text-2xl font-bold leading-9 tracking-tight text-gray-900">欢迎使用综合素质评价系统</h2>
+          <h2 class="mt-8 text-2xl font-bold leading-9 tracking-tight text-gray-900">欢迎使用综合素质评价系统（beta）</h2>
           <p class="mt-2 text-sm leading-4 text-gray-500">当前期综测：{{ comprehensiveStore.getTitle }}</p>
           <p class="mt-2 text-sm leading-4 text-gray-500">
             请先登录
@@ -115,9 +115,7 @@ import {userLogin} from "@/api/login.ts";
 import router from "@/router";
 import {ElMessage} from "element-plus";
 import {IUserLogin} from "@/types";
-import {AxiosError} from "axios";
 import {useComprehensiveStore} from "@/store";
-import {storeToRefs} from "pinia";
 
 const comprehensiveStore = useComprehensiveStore()
 
@@ -144,7 +142,7 @@ const handleSubmitButton = async () => {
     console.log(err);
     ElMessage({
       type: "error",
-      message: err.detail ? err.detail : err
+      message: err.detail ?? err
     })
   }
 }
@@ -153,9 +151,16 @@ const handleUnknownMyAccount = () => {
   alert("请联系各班班长获取")
 }
 
-onMounted(() => {
-  comprehensiveStore.update()
-  if (localStorage.getItem('token')) router.push({'name': 'panelIndex'})
+onMounted(async () => {
+  try {
+    await comprehensiveStore.update()
+  } catch (e: any) {
+    ElMessage({
+      type: "error",
+      message: e.detail ?? e
+    })
+  }
+  if (localStorage.getItem('token')) await router.push({'name': 'panelIndex'})
 })
 
 </script>

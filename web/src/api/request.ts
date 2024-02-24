@@ -1,6 +1,6 @@
 import axios, {AxiosError, AxiosRequestConfig} from 'axios'
 
-export async function request<T>(config: AxiosRequestConfig<any>): Promise<T> {
+export async function request<T = unknown>(config: AxiosRequestConfig<any>): Promise<T> {
   const instance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     timeout: 5000,

@@ -34,6 +34,11 @@ const router = createRouter({
           name: "panelMe"
         },
         {
+          path: "/panel/job",
+          component: () => import("@/views/panel/child/PanelJob.vue"),
+          name: "panelJob"
+        },
+        {
           path: "/panel/manage",
           component: () => import("@/views/panel/child/PanelManageView.vue"),
           name: "panelManage"
@@ -44,6 +49,11 @@ const router = createRouter({
           name: "panelComprehensive"
         }
       ]
+    },
+    {
+      path: "/refresh",
+      component: () => import("@/views/utils/refresh.vue"),
+      name: "refresh"
     }
   ],
 });

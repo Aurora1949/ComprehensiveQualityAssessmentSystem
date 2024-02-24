@@ -9,7 +9,7 @@ from modules.my_module import ConductScorecard
 
 
 def parse_xml(xml_path: str):
-    valid, err = validate_xml_dtd(xml_path, '../config/ComprehensiveFormat-1.0.dtd')
+    valid, err = validate_xml_dtd(xml_path, './config/ComprehensiveFormat-1.0.dtd')
     if not valid:
         print(err)
         raise lxml.etree.DTDValidateError(err)

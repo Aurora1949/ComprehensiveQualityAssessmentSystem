@@ -1,5 +1,4 @@
-import {integer} from "@vue/language-server";
-import {IUser, IUserExtend} from "@/types/index";
+import {IJWXTUser, IUser, IUserExtend} from "@/types/index";
 
 export class User implements IUser {
   account: string;
@@ -48,4 +47,21 @@ export enum AUTH {
 export enum GENDER {
   FEMALE,
   MALE
+}
+
+export class JWXTUser implements IJWXTUser {
+  education_level: string;
+  eductional_systme: string;
+  faculty: string;
+  specialty: string;
+  uid: string;
+
+  constructor(education_level = "", eductional_systme = "", faculty = "", specialty = "", uid = "") {
+    this.education_level = education_level
+    this.eductional_systme = eductional_systme
+    this.faculty = faculty
+    this.specialty = specialty
+    this.uid = uid
+  }
+
 }
